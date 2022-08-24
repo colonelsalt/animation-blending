@@ -1,0 +1,12 @@
+# Directories
+.vs/
+x64/
+**/bin/
+vendor/bin/premake/**
+bin-int/
+
+# Files
+**.bak
+**.ini
+**.vcxproj.filters
+**.vcxproj.user
