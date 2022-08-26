@@ -1,16 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
-std::string ParseShader(const char* fileName)
-{
-	std::stringstream buffer;
-	std::ifstream fileStream(fileName);
-	buffer << fileStream.rdbuf();
-	return buffer.str();
-}
+#include "Shader.h"
 
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -56,10 +46,9 @@ int main()
 
 	// Vertex buffer
 	float vertices[] = {
-		 0.5f,  0.5f, 0.0f, // 0
-		 0.5f, -0.5f, 0.0f, // 1
-		-0.5f, -0.5f, 0.0f, // 2
-		-0.5f,  0.5f, 0.0f, // 3
+		 0.0f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f, // 0
+		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f, // 1
+		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f, // 2
 	};
 	uint32_t vertexBufferId;
 	glGenBuffers(1, &vertexBufferId);
@@ -67,79 +56,21 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// Vertex attributes
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
 	// Index buffer
 	uint32_t indices[] = {
-		0, 1, 3,
-		1, 2, 3
+		0, 1, 2,
 	};
 	uint32_t indexBufferId;
 	glGenBuffers(1, &indexBufferId);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	//
-	// Shaders
-	//
-
-	// Vertex shader
-	std::string vertexShaderSource = ParseShader("assets/shaders/SimpleVert.glsl");
-
-	uint32_t vertShaderId = glCreateShader(GL_VERTEX_SHADER);
-	const char* rawVertSrc = vertexShaderSource.c_str();
-
-	glShaderSource(vertShaderId, 1, &rawVertSrc, nullptr);
-	glCompileShader(vertShaderId);
-
-	int vertShaderCompileSuccess;
-	glGetShaderiv(vertShaderId, GL_COMPILE_STATUS, &vertShaderCompileSuccess);
-	if (!vertShaderCompileSuccess)
-	{
-		char infoLog[512];
-		glGetShaderInfoLog(vertShaderId, sizeof(infoLog), nullptr, infoLog);
-		std::cout << "Vertex shader failed to compile:\n" << infoLog;
-		return 1;
-	}
-
-	// Fragment shader
-	std::string fragmentShaderSource = ParseShader("assets/shaders/SimpleFrag.glsl");
-
-	uint32_t fragShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-	const char* rawFragSrc = fragmentShaderSource.c_str();
-
-	glShaderSource(fragShaderId, 1, &rawFragSrc, nullptr);
-	glCompileShader(fragShaderId);
-
-	int fragShaderCompileSuccess;
-	glGetShaderiv(fragShaderId, GL_COMPILE_STATUS, &fragShaderCompileSuccess);
-	if (!fragShaderCompileSuccess)
-	{
-		char infoLog[512];
-		glGetShaderInfoLog(fragShaderId, sizeof(infoLog), nullptr, infoLog);
-		std::cout << "Fragment shader failed to compile:\n" << infoLog;
-		return 1;
-	}
-
-	uint32_t shaderProgramId = glCreateProgram();
-	glAttachShader(shaderProgramId, vertShaderId);
-	glAttachShader(shaderProgramId, fragShaderId);
-	glLinkProgram(shaderProgramId);
-
-	int shaderLinkSuccess;
-	glGetProgramiv(shaderProgramId, GL_LINK_STATUS, &shaderLinkSuccess);
-	if (!shaderLinkSuccess)
-	{
-		char infoLog[512];
-		glGetProgramInfoLog(shaderProgramId, sizeof(infoLog), nullptr, infoLog);
-		std::cout << "Shader program failed to link:\n" << infoLog;
-		return 1;
-	}
-	glUseProgram(shaderProgramId);
-
-	glDeleteShader(vertShaderId);
-	glDeleteShader(fragShaderId);
+	Shader shader("assets/shaders/SimpleVert.glsl", "assets/shaders/SimpleFrag.glsl");
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -147,12 +78,12 @@ int main()
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		glUseProgram(shaderProgramId);
+		
+		shader.Bind();
 		glBindVertexArray(vertexArrayId);
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
