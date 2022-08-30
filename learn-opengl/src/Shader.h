@@ -20,6 +20,7 @@ public:
 	void SetInt(const std::string& name, int value);
 	void SetFloat(const std::string& name, float value);
 
+	uint32_t GetId() const { return m_RendererId; }
 
 private:
 	std::string ParseShader(const char* fileName);

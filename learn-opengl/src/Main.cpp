@@ -1,7 +1,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Shader.h"
-#include "vendor/stb_image.h"
+
+#include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 /// Assuming the texture to load to is already bound
 void LoadTexture(const char* path, GLenum imageFormat)
@@ -132,6 +136,7 @@ int main()
 	shader.SetInt("u_Texture1", 0);
 	shader.SetInt("u_Texture2", 1);
 
+
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
@@ -140,6 +145,13 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		shader.Bind();
+		
+		glm::mat4 transform = glm::mat4(1.0f);
+		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		glUniformMatrix4fv(glGetUniformLocation(shader.GetId(), "u_Transform"), 1, GL_FALSE, glm::value_ptr(transform));
+
 		glBindVertexArray(vertexArrayId);
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
