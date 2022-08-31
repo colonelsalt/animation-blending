@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <glm/glm.hpp>
 
 #include <string>
 #include <fstream>
@@ -19,6 +20,7 @@ public:
 	void SetBool(const std::string& name, bool value);
 	void SetInt(const std::string& name, int value);
 	void SetFloat(const std::string& name, float value);
+	void SetMat4(const std::string& name, const glm::mat4& value);
 
 	uint32_t GetId() const { return m_RendererId; }
 

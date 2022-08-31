@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include <glm/gtc/type_ptr.hpp>
 
 std::string Shader::ParseShader(const char* fileName)
 {
@@ -96,6 +97,18 @@ void Shader::SetFloat(const std::string& name, float value)
 	int location = glGetUniformLocation(m_RendererId, name.c_str());
 	m_ShaderLocationCache[name] = location;
 	glUniform1i(location, value);
+}
+
+void Shader::SetMat4(const std::string& name, const glm::mat4& value)
+{
+	if (m_ShaderLocationCache.find(name) != m_ShaderLocationCache.end())
+	{
+		glUniformMatrix4fv(m_ShaderLocationCache.at(name), 1, GL_FALSE, glm::value_ptr(value));
+		return;
+	}
+	int location = glGetUniformLocation(m_RendererId, name.c_str());
+	m_ShaderLocationCache[name] = location;
+	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
 
 
