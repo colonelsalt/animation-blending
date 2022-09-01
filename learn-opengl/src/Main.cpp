@@ -7,6 +7,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Camera.h"
+
+static Camera s_Camera;
+
+static float s_DeltaTime = 0.0f;
+static float s_LastFrameTime = 0.0f;
+
 /// Assuming the texture to load to is already bound
 void LoadTexture(const char* path, GLenum imageFormat)
 {
@@ -41,8 +48,17 @@ void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 
 void ProcessInput(GLFWwindow* window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE))
-		glfwSetWindowShouldClose(window, true);
+	s_Camera.UpdateInput(window, s_DeltaTime);
+}
+
+void OnMouseMove(GLFWwindow* window, double xPos, double yPos)
+{
+	s_Camera.OnMouseMove(xPos, yPos);
+}
+
+void OnMouseScroll(GLFWwindow* window, double xOffset, double yOffset)
+{
+	s_Camera.OnMouseScroll(yOffset);
 }
 
 int main()
@@ -66,6 +82,9 @@ int main()
 		std::cout << "Failed to initialise GLAD." << std::endl;
 		return 1;
 	}
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, OnMouseMove);
+	glfwSetScrollCallback(window, OnMouseScroll);
 
 	glViewport(0, 0, 800, 600);
 	glEnable(GL_DEPTH_TEST);
@@ -173,12 +192,6 @@ int main()
 	shader.SetInt("u_Texture2", 1);
 
 
-	// corresponding to a camera position of (0, 0, 3)
-	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
@@ -194,15 +207,21 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
+		float time = glfwGetTime();
+		s_DeltaTime = time - s_LastFrameTime;
+		s_LastFrameTime = time;
+
 		ProcessInput(window);
+		s_Camera.UpdateInput(window, s_DeltaTime);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glBindVertexArray(vertexArrayId);
+
 		shader.Bind();
-		shader.SetMat4("u_View", view);
-		shader.SetMat4("u_Projection", projection);
+		shader.SetMat4("u_View", s_Camera.GetViewMatrix());
+		shader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
 		
 		for (int i = 0; i < 10; i++)
 		{
