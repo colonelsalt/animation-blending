@@ -18,6 +18,7 @@ public:
 
 	const glm::mat4& GetViewMatrix() const { return m_ViewMat; }
 	const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMat; }
+	const glm::vec3& GetPosition() const { return m_Pos; }
 
 private:
 	void UpdateView();
