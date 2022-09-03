@@ -142,6 +142,7 @@
   <ItemGroup>
     <None Include="assets\shaders\SimpleFrag.glsl" />
     <None Include="assets\shaders\SimpleVert.glsl" />
+    <None Include="assets\shaders\WhiteFrag.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
