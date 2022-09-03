@@ -162,20 +162,9 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
 
-	// Index buffer
-	/*uint32_t indices[] = {
-		0, 1, 3,
-		1, 2, 3,
-	};
-	uint32_t indexBufferId;
-	glGenBuffers(1, &indexBufferId);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
-
 	Shader shader("assets/shaders/SimpleVert.glsl", "assets/shaders/SimpleFrag.glsl");
 	shader.Bind();
 
-	shader.SetVec3("u_ObjectColor", { 1.0f, 0.5f, 0.31f });
 	shader.SetVec3("u_LightColor", { 1.0f, 1.0f, 1.0f });
 
 	Shader lightShader("assets/shaders/SimpleVert.glsl", "assets/shaders/WhiteFrag.glsl");
@@ -208,13 +197,6 @@ int main()
 	shader.SetInt("u_Texture1", 0);
 	shader.SetInt("u_Texture2", 1);
 
-
-	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-	glm::mat4 lightModel = glm::mat4(1.0f);
-	lightModel = glm::translate(lightModel, lightPos);
-	lightModel = glm::scale(lightModel, glm::vec3(0.2f));
-	
-
 	while (!glfwWindowShouldClose(window))
 	{
 		float time = glfwGetTime();
@@ -227,6 +209,11 @@ int main()
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+		glm::vec3 lightPos{ 1.2f, 1.5f, 2.0f };
+		glm::mat4 lightModel = glm::mat4(1.0f);
+		lightModel = glm::translate(lightModel, lightPos);
+		lightModel = glm::scale(lightModel, glm::vec3(0.2f));
+
 		glBindVertexArray(lightVertexArray);
 		lightShader.Bind();
 		lightShader.SetMat4("u_View", s_Camera.GetViewMatrix());
@@ -241,8 +228,20 @@ int main()
 		shader.SetMat4("u_View", s_Camera.GetViewMatrix());
 		shader.SetMat4("u_Model", glm::mat4(1.0f));
 		shader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
-		shader.SetVec3("u_LightPos", lightPos);
 		shader.SetVec3("u_ViewPos", s_Camera.GetPosition());
+		
+		shader.SetVec3("u_Material.Ambient", { 1.0f, 0.5f, 0.31f });
+		shader.SetVec3("u_Material.Diffuse", { 1.0f, 0.5f, 0.31f });
+		shader.SetVec3("u_Material.Specular", { 0.5f, 0.5f, 0.5f });
+		shader.SetFloat("u_Material.Shininess", 32.0f);
+
+		double t = glfwGetTime();
+		glm::vec3 lightColor{ sin(t * 2.0f), sin(t * 0.7f), sin(t * 1.3f) };
+
+		shader.SetVec3("u_Light.Position", lightPos);
+		shader.SetVec3("u_Light.Ambient", { lightColor * glm::vec3(0.5f) });
+		shader.SetVec3("u_Light.Diffuse", { lightColor * glm::vec3(0.2f) });
+		shader.SetVec3("u_Light.Specular", { 1.0f, 1.0f, 1.0f });
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
