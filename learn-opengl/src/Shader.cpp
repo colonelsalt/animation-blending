@@ -25,7 +25,7 @@ uint32_t Shader::CompileShader(const char* source, GLenum type)
 		
 		const char* shaderTypeName = (type == GL_VERTEX_SHADER) ? "Vertex" : "Fragment";
 		std::cout << shaderTypeName << " shader failed to compile:\n" << infoLog;
-		exit(1);
+		__debugbreak();
 	}
 	return shaderId;
 }
@@ -53,7 +53,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		glGetProgramInfoLog(m_RendererId, sizeof(infoLog), nullptr, infoLog);
 
 		std::cout << "Shader program failed to link:\n" << infoLog;
-		exit(1);
+		__debugbreak();
 	}
 
 	glDeleteShader(vertId);

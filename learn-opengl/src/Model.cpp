@@ -1,6 +1,7 @@
 #include "Model.h"
 
 #include "TextureHelper.h"
+#include "AssimpHelper.h"
 
 static aiTextureType ToAssimpTextureType(TextureType type)
 {
@@ -18,6 +19,8 @@ static aiTextureType ToAssimpTextureType(TextureType type)
 Model::Model(const char* path)
 {
 	LoadModel(path);
+
+	std::cout << "Read " << std::to_string(m_BonesLoaded.size()) << " bones from the model..." << std::endl;
 }
 
 void Model::Draw(Shader& shader)
@@ -26,14 +29,29 @@ void Model::Draw(Shader& shader)
 		m_Meshes[i].Draw(shader);
 }
 
+int Model::AppendBone(const std::string& name, const glm::mat4& inverseBindPose)
+{
+	// Bone may have been seen before in a different mesh in this model
+	if (m_BonesLoaded.find(name) == m_BonesLoaded.end())
+	{
+		BoneInfo boneInfo;
+		boneInfo.Id = m_NumBonesLoaded;
+		boneInfo.InverseBindPose = inverseBindPose;
+
+		m_BonesLoaded[name] = boneInfo;
+		m_NumBonesLoaded++;
+	}
+	return m_BonesLoaded[name].Id;
+}
+
 void Model::LoadModel(const std::string& path)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error loading model with Assimp: " << importer.GetErrorString() << std::endl;
-		exit(1);
+		__debugbreak();
 	}
 	m_DirectoryPath = path.substr(0, path.find_last_of('/'));
 
@@ -69,6 +87,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
 		vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 		vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+		vertex.ResetBoneData();
 
 		if (mesh->mTextureCoords[0]) // first set of coords is nullptr if no texture coords are present in this vertex
 		{
@@ -105,6 +124,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
 	}
 
+	ExtractMeshBoneData(vertices, mesh, scene);
 	return Mesh(vertices, indices, textures);
 }
 
@@ -141,4 +161,34 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, TextureTy
 	}
 
 	return textures;
+}
+
+void Model::ExtractMeshBoneData(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene)
+{
+	// Go through all bones in mesh
+	for (uint32_t i = 0; i < mesh->mNumBones; i++)
+	{
+		aiBone* bone = mesh->mBones[i];
+		
+		std::string boneName = bone->mName.C_Str();
+		int boneId = AppendBone(boneName, AssimpHelper::AssimpToGlmMatrix(bone->mOffsetMatrix));
+
+		assert(boneId != -1);
+		
+		uint32_t numVerticesInBone = bone->mNumWeights;
+		aiVertexWeight* weights = bone->mWeights;
+
+		// Go through all vertices whose position is influenced by this bone
+		for (uint32_t j = 0; j < numVerticesInBone; j++)
+		{
+			uint32_t vertexId = weights[j].mVertexId;
+			float weight = weights[j].mWeight;
+
+			assert(vertexId < vertices.size());
+			if (boneId >= 100)
+				__debugbreak();
+			vertices[vertexId].SetBoneData(boneId, weight);
+		}
+
+	}
 }

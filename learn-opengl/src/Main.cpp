@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Shader.h"
+#include "Animator.h"
 
 static Camera s_Camera({ 0.0f, 0.0f, 5.0f });
 
@@ -65,10 +66,14 @@ int main()
 
 	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
 
-	Shader shader("assets/shaders/SimpleVert.glsl", "assets/shaders/MeshFrag.glsl");
+	Shader shader("assets/shaders/AnimVert.glsl", "assets/shaders/MeshFrag.glsl");
 	shader.Bind();
 
-	Model backpack("assets/models/backpack/backpack.obj");
+	/*Model backpack("assets/models/backpack/backpack.obj");*/
+
+	Model vampireModel("assets/models/vampire/dancing_vampire.dae");
+	Animation animation("assets/models/vampire/dancing_vampire.dae", &vampireModel);
+	Animator animator(&animation, true);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -78,12 +83,15 @@ int main()
 
 		ProcessInput(window);
 		s_Camera.UpdateInput(window, s_DeltaTime);
+		animator.Update(s_DeltaTime);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+
 		shader.Bind();
-		shader.SetMat4("u_Model", glm::mat4(1.0f));
+		shader.SetMat4("u_Model", model);
 		shader.SetMat4("u_View", s_Camera.GetViewMatrix());
 		shader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
 
@@ -92,8 +100,15 @@ int main()
 		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
 		shader.SetVec3("u_DirLight.Specular", { 1.0f, 1.0f, 1.0f });
 
+		auto& boneTransforms = animator.GetBoneTransforms();
+		for (uint32_t i = 0; i < boneTransforms.size(); i++)
+			shader.SetMat4("u_BoneTransformations[" + std::to_string(i) + "]", boneTransforms[i]);
+
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		backpack.Draw(shader);
+		
+		vampireModel.Draw(shader);
+		
+		//backpack.Draw(shader);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

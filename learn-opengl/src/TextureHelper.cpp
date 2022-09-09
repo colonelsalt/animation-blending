@@ -13,7 +13,7 @@ uint32_t TextureHelper::LoadTexture(const char* fileName, const std::string& dir
 	if (!data)
 	{
 		std::cout << "Failed to load texture." << std::endl;
-		exit(1);
+		__debugbreak();
 	}
 
 	uint32_t textureId;
@@ -28,7 +28,7 @@ uint32_t TextureHelper::LoadTexture(const char* fileName, const std::string& dir
 	else
 	{
 		std::cout << "Unknown image format in texture: " << path << std::endl;
-		exit(1);
+		__debugbreak();
 	}
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, imageFormat, GL_UNSIGNED_BYTE, data);
