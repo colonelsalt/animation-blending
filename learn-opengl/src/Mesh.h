@@ -44,10 +44,12 @@ struct Vertex
 			__debugbreak();
 		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++)
 		{
-			if (BoneIds[i] > -1)
-				continue;
-			BoneIds[i] = boneId;
-			Weights[i] = weight;
+			if (BoneIds[i] == -1)
+			{
+				BoneIds[i] = boneId;
+				Weights[i] = weight;
+				break;
+			}
 		}
 	}
 };

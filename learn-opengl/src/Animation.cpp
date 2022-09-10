@@ -42,7 +42,7 @@ Animation::Animation(const std::string& filePath, Model* model)
 	m_Duration = animation->mDuration;
 	m_TicksPerSecond = animation->mTicksPerSecond;
 
-	ReadNode(m_RootNode, scene->mRootNode->mChildren[0], *model);
+	ReadNode(m_RootNode, scene->mRootNode, *model);
 	ExtractMissingBones(animation, *model);
 
 	std::cout << "We've got " + std::to_string(m_Bones.size()) + " animation bones and "
@@ -64,8 +64,6 @@ void Animation::ReadNode(BoneNode& dstNode, const aiNode* srcNode, Model& model)
 		std::cout << "WARNING: Found unknown bone: " << dstNode.Name << std::endl;
 		dstNode.IsUnknown = true;
 		dstNode.Info = nullptr;
-
-		return;
 	}
 	else
 	{
@@ -76,8 +74,7 @@ void Animation::ReadNode(BoneNode& dstNode, const aiNode* srcNode, Model& model)
 	{
 		BoneNode childNode;
 		ReadNode(childNode, srcNode->mChildren[i], model);
-		if (!childNode.IsUnknown)
-			dstNode.Children.push_back(childNode);
+		dstNode.Children.push_back(childNode);
 
 	}
 	m_NumBoneNodes++;

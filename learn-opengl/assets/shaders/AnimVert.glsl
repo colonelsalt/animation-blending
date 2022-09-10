@@ -38,7 +38,7 @@ void main()
 			break;
 		}
 
-		vec4 bonePosition = u_BoneTransformations[i] * vec4(a_Position, 1.0);
+		vec4 bonePosition = u_BoneTransformations[a_BoneIds[i]] * vec4(a_Position, 1.0);
 		finalPosition += bonePosition * a_BoneWeights[i];
 
 	}

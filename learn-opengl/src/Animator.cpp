@@ -68,10 +68,6 @@ void Animator::UpdateBoneTransform(const BoneNode& bone, const glm::mat4& parent
 		boneAnimation->Update(m_CurrentTime);
 		boneTransform = boneAnimation->GetLocalPose();
 	}
-	else
-	{
-		__debugbreak();
-	}
 
 	glm::mat4 modelSpaceTransform = parentTransform * boneTransform;
 	if (bone.Info)
@@ -81,10 +77,6 @@ void Animator::UpdateBoneTransform(const BoneNode& bone, const glm::mat4& parent
 
 		// Final matrix describes the bone's offset from its bind pose
 		m_BoneTransformations[boneIndex] = modelSpaceTransform * inverseBindPose;
-	}
-	else
-	{
-		__debugbreak();
 	}
 
 	for (uint32_t i = 0; i < bone.Children.size(); i++)

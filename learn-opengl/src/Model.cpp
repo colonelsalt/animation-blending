@@ -20,6 +20,7 @@ Model::Model(const char* path)
 {
 	LoadModel(path);
 
+	std::cout << "Read " << std::to_string(m_Meshes.size()) << " meshes from the model..." << std::endl;
 	std::cout << "Read " << std::to_string(m_BonesLoaded.size()) << " bones from the model..." << std::endl;
 }
 
@@ -41,13 +42,17 @@ int Model::AppendBone(const std::string& name, const glm::mat4& inverseBindPose)
 		m_BonesLoaded[name] = boneInfo;
 		m_NumBonesLoaded++;
 	}
+	else
+	{
+		__debugbreak();
+	}
 	return m_BonesLoaded[name].Id;
 }
 
 void Model::LoadModel(const std::string& path)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "Error loading model with Assimp: " << importer.GetErrorString() << std::endl;
@@ -125,6 +130,8 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	}
 
 	ExtractMeshBoneData(vertices, mesh, scene);
+
+	std::cout << "Created mesh: " << mesh->mName.C_Str() << std::endl;
 	return Mesh(vertices, indices, textures);
 }
 
@@ -185,8 +192,6 @@ void Model::ExtractMeshBoneData(std::vector<Vertex>& vertices, aiMesh* mesh, con
 			float weight = weights[j].mWeight;
 
 			assert(vertexId < vertices.size());
-			if (boneId >= 100)
-				__debugbreak();
 			vertices[vertexId].SetBoneData(boneId, weight);
 		}
 

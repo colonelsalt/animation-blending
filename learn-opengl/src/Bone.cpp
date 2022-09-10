@@ -27,7 +27,7 @@ Bone::Bone(const std::string& name, int id, const aiNodeAnim* channel)
 		aiQuaternion& rot = channel->mRotationKeys[i].mValue;
 		float timestamp = channel->mRotationKeys[i].mTime;
 
-		RotationKeyFrame rotKey = { glm::quat(rot.w, rot.y, rot.z, rot.x), timestamp };
+		RotationKeyFrame rotKey = { glm::quat(rot.w, rot.x, rot.y, rot.z), timestamp };
 		m_RotationKeys.push_back(rotKey);
 	}
 

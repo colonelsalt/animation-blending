@@ -36,6 +36,38 @@ void OnMouseScroll(GLFWwindow* window, double xOffset, double yOffset)
 	s_Camera.OnMouseScroll(yOffset);
 }
 
+static void PrintBoneTransformations(const std::vector<glm::mat4>& boneTransforms)
+{
+	int boneIndex = 0;
+	for (const glm::mat4& transform : boneTransforms)
+	{
+		std::cout << "Bone " << boneIndex << ": " << std::endl;
+
+		std::cout << transform[0][0] << ", ";
+		std::cout << transform[1][0] << ", ";
+		std::cout << transform[2][0] << ", ";
+		std::cout << transform[3][0] << ", " << std::endl;
+
+		std::cout << transform[0][1] << ", ";
+		std::cout << transform[1][1] << ", ";
+		std::cout << transform[2][1] << ", ";
+		std::cout << transform[3][1] << ", " << std::endl;
+
+		std::cout << transform[0][2] << ", ";
+		std::cout << transform[1][2] << ", ";
+		std::cout << transform[2][2] << ", ";
+		std::cout << transform[3][2] << ", " << std::endl;
+
+		std::cout << transform[0][3] << ", ";
+		std::cout << transform[1][3] << ", ";
+		std::cout << transform[2][3] << ", ";
+		std::cout << transform[3][3] << ", " << std::endl;
+
+		boneIndex++;
+	}
+
+}
+
 int main()
 {
 	glfwInit();
@@ -88,7 +120,7 @@ int main()
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
 
 		shader.Bind();
 		shader.SetMat4("u_Model", model);
