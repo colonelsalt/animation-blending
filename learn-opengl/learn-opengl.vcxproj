@@ -144,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\MeshFrag.glsl" />
+    <None Include="assets\shaders\LightingFrag.glsl" />
     <None Include="assets\shaders\SimpleFrag.glsl" />
     <None Include="assets\shaders\SimpleVert.glsl" />
     <None Include="assets\shaders\WhiteFrag.glsl" />

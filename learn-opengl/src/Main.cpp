@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Shader.h"
+#include "TextureHelper.h"
 
 static Camera s_Camera({ 0.0f, 0.0f, 5.0f });
 
@@ -62,13 +63,107 @@ int main()
 
 	glViewport(0, 0, 800, 600);
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
 
-	Shader shader("assets/shaders/SimpleVert.glsl", "assets/shaders/MeshFrag.glsl");
-	shader.Bind();
+	float cubeVertices[] = {
+		// positions          // texture Coords
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-	Model backpack("assets/models/backpack/backpack.obj");
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	};
+
+	float planeVertices[] = {
+		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+		 5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+		 5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+		 5.0f, -0.5f, -5.0f,  2.0f, 2.0f
+	};
+
+	// Cube data ---
+	uint32_t cubeVao;
+	glGenVertexArrays(1, &cubeVao);
+	glBindVertexArray(cubeVao);
+
+	uint32_t cubeVertexBuffer;
+	glGenBuffers(1, &cubeVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVertexBuffer);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+
+	
+	// Plane data ---
+	uint32_t planeVao;
+	glGenVertexArrays(1, &planeVao);
+	glBindVertexArray(planeVao);
+
+	uint32_t planeVertexBuffer;
+	glGenBuffers(1, &planeVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, planeVertexBuffer);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+
+	uint32_t cubeTexture = TextureHelper::LoadTexture("marble.jpg", "assets/textures");
+	uint32_t floorTexture = TextureHelper::LoadTexture("metal.png", "assets/textures");
+
+	Shader shader("assets/shaders/SimpleVert.glsl", "assets/shaders/SimpleFrag.glsl");
+	shader.Bind();
+	shader.SetInt("u_Texture", 0);
+
+	/*Model backpack("assets/models/backpack/backpack.obj");*/
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -83,17 +178,26 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.Bind();
-		shader.SetMat4("u_Model", glm::mat4(1.0f));
 		shader.SetMat4("u_View", s_Camera.GetViewMatrix());
 		shader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
 
-		shader.SetVec3("u_DirLight.Direction", { 0.1f, -1.0f, 0.3f });
-		shader.SetVec3("u_DirLight.Ambient", { 0.2f, 0.2f, 0.2f });
-		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
-		shader.SetVec3("u_DirLight.Specular", { 1.0f, 1.0f, 1.0f });
+		// Draw cubes
+		glBindVertexArray(cubeVao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		glm::mat4 cube1Model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
+		shader.SetMat4("u_Model", cube1Model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		backpack.Draw(shader);
+		glm::mat4 cube2Model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+		shader.SetMat4("u_Model", cube2Model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// Draw floor
+		glBindVertexArray(planeVao);
+		glBindTexture(GL_TEXTURE_2D, floorTexture);
+		shader.SetMat4("u_Model", glm::mat4(1.0f));
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
