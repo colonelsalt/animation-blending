@@ -63,7 +63,7 @@ int main()
 
 	glViewport(0, 0, 800, 600);
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glEnable(GL_STENCIL_TEST);
 
 	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
 
@@ -163,6 +163,8 @@ int main()
 	shader.Bind();
 	shader.SetInt("u_Texture", 0);
 
+	Shader outlineShader("assets/shaders/SimpleVert.glsl", "assets/shaders/BorderFrag.glsl");
+
 	/*Model backpack("assets/models/backpack/backpack.obj");*/
 
 	while (!glfwWindowShouldClose(window))
@@ -175,20 +177,15 @@ int main()
 		s_Camera.UpdateInput(window, s_DeltaTime);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		shader.Bind();
 		shader.SetMat4("u_View", s_Camera.GetViewMatrix());
 		shader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
 
-		// Draw cubes
+		// Draw cube 2
 		glBindVertexArray(cubeVao);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, cubeTexture);
-		glm::mat4 cube1Model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
-		shader.SetMat4("u_Model", cube1Model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
+		glStencilMask(0);
 		glm::mat4 cube2Model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
 		shader.SetMat4("u_Model", cube2Model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -198,6 +195,35 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, floorTexture);
 		shader.SetMat4("u_Model", glm::mat4(1.0f));
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// Draw cube 1
+		glStencilFunc(GL_ALWAYS, 1, 0xFF); // fragment always passes stencil test if it's rendered
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // write 1 to stencil buffer if stencil & depth tests pass
+		glStencilMask(0xFF);
+
+		glBindVertexArray(cubeVao);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		glm::vec3 cube1Pos = glm::vec3(-1.0f, 0.0f, -1.0f);
+		glm::mat4 cube1Model = glm::translate(glm::mat4(1.0f), cube1Pos);
+		shader.SetMat4("u_Model", cube1Model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// Draw cube outline
+		glStencilMask(0); // disable writing to stencil buffer
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // stencil test passes if value != 1 (it will be 1 where the cube was rendered)
+		glDisable(GL_DEPTH_TEST); // outline should not be affected by depth buffer
+		outlineShader.Bind();
+		outlineShader.SetMat4("u_View", s_Camera.GetViewMatrix());
+		outlineShader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
+		glm::mat4 cube2Scale = glm::translate(glm::mat4(1.0f), cube1Pos)
+			* glm::scale(glm::mat4(1.0f), glm::vec3(1.1f, 1.1f, 1.1f));
+		outlineShader.SetMat4("u_Model", cube2Scale);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glEnable(GL_DEPTH_TEST);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
