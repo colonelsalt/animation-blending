@@ -11,7 +11,7 @@
 #include "Shader.h"
 #include "Animator.h"
 
-static Camera s_Camera({ 0.0f, 0.0f, 5.0f });
+static Camera s_Camera({ 0.0f, 4.0f, 13.0f });
 
 static float s_DeltaTime = 0.0f;
 static float s_LastFrameTime = 0.0f;
@@ -36,42 +36,10 @@ void OnMouseScroll(GLFWwindow* window, double xOffset, double yOffset)
 	s_Camera.OnMouseScroll(yOffset);
 }
 
-static void PrintBoneTransformations(const std::vector<glm::mat4>& boneTransforms)
-{
-	int boneIndex = 0;
-	for (const glm::mat4& transform : boneTransforms)
-	{
-		std::cout << "Bone " << boneIndex << ": " << std::endl;
-
-		std::cout << transform[0][0] << ", ";
-		std::cout << transform[1][0] << ", ";
-		std::cout << transform[2][0] << ", ";
-		std::cout << transform[3][0] << ", " << std::endl;
-
-		std::cout << transform[0][1] << ", ";
-		std::cout << transform[1][1] << ", ";
-		std::cout << transform[2][1] << ", ";
-		std::cout << transform[3][1] << ", " << std::endl;
-
-		std::cout << transform[0][2] << ", ";
-		std::cout << transform[1][2] << ", ";
-		std::cout << transform[2][2] << ", ";
-		std::cout << transform[3][2] << ", " << std::endl;
-
-		std::cout << transform[0][3] << ", ";
-		std::cout << transform[1][3] << ", ";
-		std::cout << transform[2][3] << ", ";
-		std::cout << transform[3][3] << ", " << std::endl;
-
-		boneIndex++;
-	}
-
-}
-
 int main()
 {
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -103,8 +71,8 @@ int main()
 
 	/*Model backpack("assets/models/backpack/backpack.obj");*/
 
-	Model vampireModel("assets/models/vampire/dancing_vampire.dae");
-	Animation animation("assets/models/vampire/dancing_vampire.dae", &vampireModel);
+	Model bossModel("assets/models/boss/The Boss.fbx");
+	Animation animation("assets/models/boss/idle.fbx", &bossModel);
 	Animator animator(&animation, true);
 
 	while (!glfwWindowShouldClose(window))
@@ -120,7 +88,7 @@ int main()
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f));
+		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.04f));
 
 		shader.Bind();
 		shader.SetMat4("u_Model", model);
@@ -138,7 +106,7 @@ int main()
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
-		vampireModel.Draw(shader);
+		bossModel.Draw(shader);
 		
 		//backpack.Draw(shader);
 

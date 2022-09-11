@@ -2,35 +2,6 @@
 
 #include "AssimpHelper.h"
 
-static void PrintNode(BoneNode* node, Model* model)
-{
-	if (!node)
-		return;
-
-	std::cout << "{\"" << node->Name << "\":{" << std::endl;
-
-	if (model->ContainsBone(node->Name))
-	{
-		std::cout << "\"ID\":" << model->GetBone(node->Name).Id << "," << std::endl;
-	}
-	else
-	{
-		std::cout << "\"ID\": -1" << "," << std::endl;
-	}
-	
-	std::cout << "\"children\": [" << std::endl;
-	for (uint32_t i = 0; i < node->Children.size(); i++)
-	{
-		PrintNode(&node->Children[i], model);
-		if (i < node->Children.size() - 1)
-			std::cout << "," << std::endl;
-	}
-	std::cout << "]}" << std::endl;
-	
-
-	std::cout << "}" << std::endl;
-}
-
 Animation::Animation(const std::string& filePath, Model* model)
 {
 	Assimp::Importer importer;
@@ -47,8 +18,6 @@ Animation::Animation(const std::string& filePath, Model* model)
 
 	std::cout << "We've got " + std::to_string(m_Bones.size()) + " animation bones and "
 		+ std::to_string(m_NumBoneNodes) + " bone nodes..." << std::endl;
-
-	PrintNode(&m_RootNode, model);
 }
 
 void Animation::ReadNode(BoneNode& dstNode, const aiNode* srcNode, Model& model)
@@ -90,7 +59,7 @@ void Animation::ExtractMissingBones(const aiAnimation* animation, Model& model)
 		if (!model.ContainsBone(boneName))
 		{
 			std::cout << "Found unknown bone in animation not present in model: " << boneName << std::endl;
-			__debugbreak();
+			//__debugbreak();
 		}
 		const BoneInfo& boneInfo = model.GetBone(boneName);
 

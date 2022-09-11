@@ -29,8 +29,8 @@ public:
 	}
 	BoneInfo& GetBone(const std::string& boneName)
 	{
-		if (!ContainsBone(boneName))
-			__debugbreak();
+		/*if (!ContainsBone(boneName))
+			__debugbreak();*/
 		//assert(ContainsBone(boneName));
 		return m_BonesLoaded[boneName];
 	}
@@ -38,7 +38,7 @@ private:
 	void LoadModel(const std::string& path);
 	void ProcessNode(aiNode* node, const aiScene* scene);
 	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-	std::vector<Texture> LoadMaterialTextures(aiMaterial* material, TextureType type);
+	std::vector<Texture> LoadMaterialTextures(aiMaterial* material, TextureType type, const aiScene* scene);
 	void ExtractMeshBoneData(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene);
 
 private:

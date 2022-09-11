@@ -117,7 +117,7 @@ int Bone::GetPositionIndex(float animationTime) const
 		if (animationTime < m_PositionKeys[i + 1].Timestamp)
 			return i;
 	}
-	assert(false);
+	return m_PositionKeys.size() - 2;
 }
 
 int Bone::GetRotationIndex(float animationTime) const
@@ -127,7 +127,7 @@ int Bone::GetRotationIndex(float animationTime) const
 		if (animationTime < m_RotationKeys[i + 1].Timestamp)
 			return i;
 	}
-	assert(false);
+	return m_RotationKeys.size() - 2;
 }
 
 int Bone::GetScaleIndex(float animationTime) const
@@ -137,7 +137,7 @@ int Bone::GetScaleIndex(float animationTime) const
 		if (animationTime < m_ScaleKeys[i + 1].Timestamp)
 			return i;
 	}
-	assert(false);
+	return m_ScaleKeys.size() - 2;
 }
 
 float Bone::GetLerpParam(float prevKeyTime, float nextKeyTime, float currentTime)

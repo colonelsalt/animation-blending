@@ -20,8 +20,8 @@ Model::Model(const char* path)
 {
 	LoadModel(path);
 
-	std::cout << "Read " << std::to_string(m_Meshes.size()) << " meshes from the model..." << std::endl;
-	std::cout << "Read " << std::to_string(m_BonesLoaded.size()) << " bones from the model..." << std::endl;
+	//std::cout << "Read " << std::to_string(m_Meshes.size()) << " meshes from the model..." << std::endl;
+	//std::cout << "Read " << std::to_string(m_BonesLoaded.size()) << " bones from the model..." << std::endl;
 }
 
 void Model::Draw(Shader& shader)
@@ -44,7 +44,7 @@ int Model::AppendBone(const std::string& name, const glm::mat4& inverseBindPose)
 	}
 	else
 	{
-		__debugbreak();
+		//__debugbreak();
 	}
 	return m_BonesLoaded[name].Id;
 }
@@ -52,6 +52,7 @@ int Model::AppendBone(const std::string& name, const glm::mat4& inverseBindPose)
 void Model::LoadModel(const std::string& path)
 {
 	Assimp::Importer importer;
+
 	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -122,20 +123,20 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-		std::vector<Texture> diffuseTextures = LoadMaterialTextures(material, TextureType::Diffuse);
+		std::vector<Texture> diffuseTextures = LoadMaterialTextures(material, TextureType::Diffuse, scene);
 		textures.insert(textures.end(), diffuseTextures.begin(), diffuseTextures.end());
 
-		std::vector<Texture> specularTextures = LoadMaterialTextures(material, TextureType::Specular);
+		std::vector<Texture> specularTextures = LoadMaterialTextures(material, TextureType::Specular, scene);
 		textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
 	}
 
 	ExtractMeshBoneData(vertices, mesh, scene);
 
-	std::cout << "Created mesh: " << mesh->mName.C_Str() << std::endl;
+	//std::cout << "Created mesh: " << mesh->mName.C_Str() << std::endl;
 	return Mesh(vertices, indices, textures);
 }
 
-std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, TextureType type)
+std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, TextureType type, const aiScene* scene)
 {
 	std::vector<Texture> textures;
 	
@@ -154,10 +155,20 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, TextureTy
 		else
 		{
 			Texture texture;
-			// Assuming that textures are all in same directory as model
-			texture.Id = TextureHelper::LoadTexture(textureFileName.c_str(), m_DirectoryPath);
-			texture.Type = type;
-			texture.FileName = textureFileName;
+			if (false)
+			{
+				// Assuming that textures are all in same directory as model
+				texture.Id = TextureHelper::LoadTexture(textureFileName.c_str(), m_DirectoryPath);
+				texture.Type = type;
+				texture.FileName = textureFileName;
+			}
+			else
+			{
+				const aiTexture* aiTexture = scene->GetEmbeddedTexture(textureFileName.c_str());
+				texture.Id = TextureHelper::LoadTextureEmbedded(aiTexture);
+				texture.Type = type;
+				texture.FileName = textureFileName;
+			}
 			
 			textures.push_back(texture);
 
