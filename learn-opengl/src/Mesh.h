@@ -11,7 +11,7 @@ enum class TextureType
 	Diffuse, Specular
 };
 
-static constexpr int MAX_BONES_PER_VERTEX = 4;
+static constexpr int MAX_JOINTS_PER_VERTEX = 4;
 
 struct Vertex
 {
@@ -24,29 +24,27 @@ struct Vertex
 	glm::vec3 Bitangent;
 
 	// ID of each bone whose transformation influences the pos/rot of this vertex
-	int BoneIds[MAX_BONES_PER_VERTEX];
+	int JointIds[MAX_JOINTS_PER_VERTEX];
 
 	// How much each of those bones affect the pos/rot (S: range [0, 1]??)
-	float Weights[MAX_BONES_PER_VERTEX];
+	float Weights[MAX_JOINTS_PER_VERTEX];
 
-	void ResetBoneData()
+	void ResetJointData()
 	{
-		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++)
+		for (uint32_t i = 0; i < MAX_JOINTS_PER_VERTEX; i++)
 		{
-			BoneIds[i] = -1;
+			JointIds[i] = -1;
 			Weights[i] = 0.0f;
 		}
 	}
 
-	void SetBoneData(int boneId, float weight)
+	void SetJointData(int jointId, float weight)
 	{
-		if (boneId >= 100)
-			__debugbreak();
-		for (uint32_t i = 0; i < MAX_BONES_PER_VERTEX; i++)
+		for (uint32_t i = 0; i < MAX_JOINTS_PER_VERTEX; i++)
 		{
-			if (BoneIds[i] == -1)
+			if (JointIds[i] == -1)
 			{
-				BoneIds[i] = boneId;
+				JointIds[i] = jointId;
 				Weights[i] = weight;
 				break;
 			}

@@ -1,17 +1,9 @@
-#include "Bone.h"
+#include "JointClip.h"
 
-Bone::Bone()
+JointClip::JointClip(const std::string& name, const aiNodeAnim* channel)
+	: m_LocalPose(1.0f), m_Name(name)
 {
-	__debugbreak();
-}
-
-Bone::Bone(const std::string& name, int id, const aiNodeAnim* channel)
-	: m_LocalPose(1.0f), m_Name(name), m_Id(id)
-{
-	if (channel->mNumPositionKeys == 0)
-		__debugbreak();
-
-	//m_PositionKeys.reserve(channel->mNumPositionKeys);
+	m_PositionKeys.reserve(channel->mNumPositionKeys);
 	for (uint32_t i = 0; i < channel->mNumPositionKeys; i++)
 	{
 		aiVector3D& pos = channel->mPositionKeys[i].mValue;
@@ -21,7 +13,7 @@ Bone::Bone(const std::string& name, int id, const aiNodeAnim* channel)
 		m_PositionKeys.push_back(posKey);
 	}
 
-	//m_RotationKeys.reserve(channel->mNumRotationKeys);
+	m_RotationKeys.reserve(channel->mNumRotationKeys);
 	for (uint32_t i = 0; i < channel->mNumRotationKeys; i++)
 	{
 		aiQuaternion& rot = channel->mRotationKeys[i].mValue;
@@ -31,7 +23,7 @@ Bone::Bone(const std::string& name, int id, const aiNodeAnim* channel)
 		m_RotationKeys.push_back(rotKey);
 	}
 
-	//m_ScaleKeys.reserve(channel->mNumScalingKeys);
+	m_ScaleKeys.reserve(channel->mNumScalingKeys);
 	for (uint32_t i = 0; i < channel->mNumScalingKeys; i++)
 	{
 		aiVector3D& scale = channel->mScalingKeys[i].mValue;
@@ -40,12 +32,9 @@ Bone::Bone(const std::string& name, int id, const aiNodeAnim* channel)
 		ScaleKeyFrame scaleKey = { glm::vec3(scale.x, scale.y, scale.z), timestamp };
 		m_ScaleKeys.push_back(scaleKey);
 	}
-
-	if (m_PositionKeys.size() == 0)
-		__debugbreak();
 }
 
-void Bone::Update(float animationTime)
+void JointClip::Update(float animationTime)
 {
 	glm::mat4 translation = InterpolatePosition(animationTime);
 	glm::mat4 rotation = InterpolateRotation(animationTime);
@@ -55,7 +44,7 @@ void Bone::Update(float animationTime)
 	m_LocalPose = translation * rotation * scale;
 }
 
-glm::mat4 Bone::InterpolatePosition(float animationTime) const
+glm::mat4 JointClip::InterpolatePosition(float animationTime) const
 {
 	if (m_PositionKeys.size() == 1)
 		return glm::translate(glm::mat4(1.0f), m_PositionKeys[0].Position);
@@ -71,7 +60,7 @@ glm::mat4 Bone::InterpolatePosition(float animationTime) const
 	return glm::translate(glm::mat4(1.0f), interpolatedPos);
 }
 
-glm::mat4 Bone::InterpolateRotation(float animationTime) const
+glm::mat4 JointClip::InterpolateRotation(float animationTime) const
 {
 	if (m_RotationKeys.size() == 1)
 	{
@@ -91,7 +80,7 @@ glm::mat4 Bone::InterpolateRotation(float animationTime) const
 	return glm::toMat4(glm::normalize(interpolatedRot));
 }
 
-glm::mat4 Bone::InterpolateScale(float animationTime) const
+glm::mat4 JointClip::InterpolateScale(float animationTime) const
 {
 	if (m_ScaleKeys.size() == 1)
 		return glm::scale(glm::mat4(1.0f), m_ScaleKeys[0].Scale);
@@ -107,7 +96,7 @@ glm::mat4 Bone::InterpolateScale(float animationTime) const
 	return glm::scale(glm::mat4(1.0f), interpolatedScale);
 }
 
-int Bone::GetPositionIndex(float animationTime) const
+int JointClip::GetPositionIndex(float animationTime) const
 {
 	if (m_PositionKeys.size() == 0)
 		__debugbreak();
@@ -120,7 +109,7 @@ int Bone::GetPositionIndex(float animationTime) const
 	return m_PositionKeys.size() - 2;
 }
 
-int Bone::GetRotationIndex(float animationTime) const
+int JointClip::GetRotationIndex(float animationTime) const
 {
 	for (uint32_t i = 0; i < m_RotationKeys.size() - 1; i++)
 	{
@@ -130,7 +119,7 @@ int Bone::GetRotationIndex(float animationTime) const
 	return m_RotationKeys.size() - 2;
 }
 
-int Bone::GetScaleIndex(float animationTime) const
+int JointClip::GetScaleIndex(float animationTime) const
 {
 	for (uint32_t i = 0; i < m_ScaleKeys.size() - 1; i++)
 	{
@@ -140,7 +129,7 @@ int Bone::GetScaleIndex(float animationTime) const
 	return m_ScaleKeys.size() - 2;
 }
 
-float Bone::GetLerpParam(float prevKeyTime, float nextKeyTime, float currentTime)
+float JointClip::GetLerpParam(float prevKeyTime, float nextKeyTime, float currentTime)
 {
 	return (currentTime - prevKeyTime) / (nextKeyTime - prevKeyTime);
 }

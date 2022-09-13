@@ -4,16 +4,16 @@
 Animator::Animator(Animation* animation, bool shouldLoop)
 	: m_CurrentAnimation(animation), m_CurrentTime(0.0f), m_ShouldLoop(shouldLoop)
 {
-	m_BoneTransformations.reserve(MAX_TOTAL_BONES);
+	m_SkinningMatrices.reserve(MAX_TOTAL_BONES);
 	for (uint32_t i = 0; i < MAX_TOTAL_BONES; i++)
 	{
-		m_BoneTransformations.push_back(glm::mat4(1.0f));
+		m_SkinningMatrices.push_back(glm::mat4(1.0f));
 	}
 }
 
 void Animator::Update(float deltaTime)
 {
-	if (!m_CurrentAnimation)
+	if (!m_CurrentAnimation || !m_IsRunning)
 		return;
 
 	m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * deltaTime;
@@ -22,35 +22,35 @@ void Animator::Update(float deltaTime)
 	else
 		m_CurrentTime = glm::max(m_CurrentTime, m_CurrentAnimation->GetDuration());
 
-	UpdateBoneTransform(m_CurrentAnimation->GetRootBone(), glm::mat4(1.0f));
-
-	//PrintBoneTransforms(m_BoneTransformations);
+	UpdateJointTransforms(m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
 }
 
-void Animator::UpdateBoneTransform(const BoneNode& bone, const glm::mat4& parentTransform)
+void Animator::UpdateJointTransforms(const SkeletonNode& node, const glm::mat4& parentTransform)
 {
-	glm::mat4 boneTransform = bone.Transform;
+	// Default value if this node is not animated
+	glm::mat4 jointTransform = node.Transform;
 
-	Bone* boneAnimation = m_CurrentAnimation->GetBoneAnimation(bone.Name);
-	if (boneAnimation)
+	JointClip* jointClip = m_CurrentAnimation->GetJointClip(node.Name);
+	if (jointClip)
 	{
-		boneAnimation->Update(m_CurrentTime);
-		boneTransform = boneAnimation->GetLocalPose();
+		jointClip->Update(m_CurrentTime);
+		jointTransform = jointClip->GetLocalPose();
 	}
 
-	glm::mat4 modelSpaceTransform = parentTransform * boneTransform;
-	if (bone.Info)
+	glm::mat4 modelSpaceTransform = parentTransform * jointTransform;
+	
+	// If this node is a joint (i.e. is bound to a vertex), update its skinning matrix
+	if (node.JointInfo)
 	{
-		int boneIndex = bone.Info->Id;
-		const glm::mat4& inverseBindPose = bone.Info->InverseBindPose;
+		int jointIndex = node.JointInfo->Id;
+		const glm::mat4& inverseBindPose = node.JointInfo->InverseBindPose;
 
-		// Final matrix describes the bone's offset from its bind pose
-		m_BoneTransformations[boneIndex] = modelSpaceTransform * inverseBindPose;
+		m_SkinningMatrices[jointIndex] = modelSpaceTransform * inverseBindPose;
 	}
 
-	for (uint32_t i = 0; i < bone.Children.size(); i++)
+	for (uint32_t i = 0; i < node.Children.size(); i++)
 	{
-		UpdateBoneTransform(bone.Children[i], modelSpaceTransform);
+		UpdateJointTransforms(node.Children[i], modelSpaceTransform);
 	}
 
 }

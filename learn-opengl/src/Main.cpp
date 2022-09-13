@@ -72,8 +72,20 @@ int main()
 	/*Model backpack("assets/models/backpack/backpack.obj");*/
 
 	Model bossModel("assets/models/boss/The Boss.fbx");
-	Animation animation("assets/models/boss/idle.fbx", &bossModel);
-	Animator animator(&animation, true);
+	
+	Animation idleAnimation("assets/models/boss/idle.fbx", &bossModel);
+	Animator idleAnimator(&idleAnimation, true);
+
+	Animator* currentAnimator = &idleAnimator;
+
+	Animation walkingAnimation("assets/models/boss/walking.fbx", &bossModel);
+	Animator walkingAnimator(&walkingAnimation, true);
+
+	Animation runAnimation("assets/models/boss/running.fbx", &bossModel);
+	Animator runAnimator(&runAnimation, true);
+
+	Animation coverAnimation("assets/models/boss/cover to stand.fbx", &bossModel);
+	Animator coverAnimator(&coverAnimation, true);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -83,7 +95,29 @@ int main()
 
 		ProcessInput(window);
 		s_Camera.UpdateInput(window, s_DeltaTime);
-		animator.Update(s_DeltaTime);
+
+		if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
+			currentAnimator->Play();
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+			currentAnimator->Pause();
+
+		Animator* newAnimator = nullptr;
+		if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+			newAnimator = &walkingAnimator;
+		if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+			newAnimator = &runAnimator;
+		if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+			newAnimator = &coverAnimator;
+		
+		if (newAnimator)
+		{
+			currentAnimator->Pause();
+			currentAnimator = newAnimator;
+			newAnimator->Play();
+		}
+
+
+		currentAnimator->Update(s_DeltaTime);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -100,9 +134,9 @@ int main()
 		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
 		shader.SetVec3("u_DirLight.Specular", { 1.0f, 1.0f, 1.0f });
 
-		auto& boneTransforms = animator.GetBoneTransforms();
-		for (uint32_t i = 0; i < boneTransforms.size(); i++)
-			shader.SetMat4("u_BoneTransformations[" + std::to_string(i) + "]", boneTransforms[i]);
+		auto& skinningMatrices = currentAnimator->GetSkinningMatrices();
+		for (uint32_t i = 0; i < skinningMatrices.size(); i++)
+			shader.SetMat4("u_SkinningMatrices[" + std::to_string(i) + "]", skinningMatrices[i]);
 
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		

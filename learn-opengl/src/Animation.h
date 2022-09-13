@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Model.h"
-#include "Bone.h"
+#include "JointClip.h"
 
-struct BoneNode
+struct SkeletonNode
 {
-	//! Relative to parent bone
+	//! Relative to parent joint
 	glm::mat4 Transform;
 	std::string Name;
-	std::vector<BoneNode> Children;
-	BoneInfo* Info;
-	bool IsUnknown = false;
+	std::vector<SkeletonNode> Children;
+
+	//! If this is a joint (i.e. is bound to one/more vertices), contains data about the joint; otherwise nullptr.
+	const Joint* JointInfo;
 };
 
 
@@ -19,23 +20,23 @@ class Animation
 public:
 	Animation(const std::string& filePath, Model* model);
 
-	const BoneNode& GetRootBone() const { return m_RootNode; }
+	const SkeletonNode& GetRootNode() const { return m_RootNode; }
 	int GetTicksPerSecond() const { return m_TicksPerSecond; }
 	float GetDuration() const { return m_Duration; }
-	Bone* GetBoneAnimation(const std::string& boneName)
+	JointClip* GetJointClip(const std::string& jointName)
 	{
-		if (m_Bones.find(boneName) == m_Bones.end())
+		if (m_JointClips.find(jointName) == m_JointClips.end())
 			return nullptr;
-		return &m_Bones[boneName];
+		return &m_JointClips.at(jointName);
 	}
 private:
-	void ReadNode(BoneNode& dstNode, const aiNode* srcNode, Model& model);
-	void ExtractMissingBones(const aiAnimation* animation, Model& model);
+	void ReadNode(SkeletonNode& dstNode, const aiNode* srcNode, Model& model);
+	void CreateJointClips(const aiAnimation* animation);
 private:
 	float m_Duration;
 	int m_TicksPerSecond;
-	std::unordered_map<std::string, Bone> m_Bones;
-	BoneNode m_RootNode;
+	std::unordered_map<std::string, JointClip> m_JointClips;
+	SkeletonNode m_RootNode;
 
 	uint32_t m_NumBoneNodes = 0;
 };

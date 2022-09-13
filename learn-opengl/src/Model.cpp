@@ -1,5 +1,7 @@
 #include "Model.h"
 
+#include "Core.h"
+
 #include "TextureHelper.h"
 #include "AssimpHelper.h"
 
@@ -19,34 +21,12 @@ static aiTextureType ToAssimpTextureType(TextureType type)
 Model::Model(const char* path)
 {
 	LoadModel(path);
-
-	//std::cout << "Read " << std::to_string(m_Meshes.size()) << " meshes from the model..." << std::endl;
-	//std::cout << "Read " << std::to_string(m_BonesLoaded.size()) << " bones from the model..." << std::endl;
 }
 
 void Model::Draw(Shader& shader)
 {
 	for (uint32_t i = 0; i < m_Meshes.size(); i++)
 		m_Meshes[i].Draw(shader);
-}
-
-int Model::AppendBone(const std::string& name, const glm::mat4& inverseBindPose)
-{
-	// Bone may have been seen before in a different mesh in this model
-	if (m_BonesLoaded.find(name) == m_BonesLoaded.end())
-	{
-		BoneInfo boneInfo;
-		boneInfo.Id = m_NumBonesLoaded;
-		boneInfo.InverseBindPose = inverseBindPose;
-
-		m_BonesLoaded[name] = boneInfo;
-		m_NumBonesLoaded++;
-	}
-	else
-	{
-		//__debugbreak();
-	}
-	return m_BonesLoaded[name].Id;
 }
 
 void Model::LoadModel(const std::string& path)
@@ -93,7 +73,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
 		vertex.Position = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 		vertex.Normal = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-		vertex.ResetBoneData();
+		vertex.ResetJointData();
 
 		if (mesh->mTextureCoords[0]) // first set of coords is nullptr if no texture coords are present in this vertex
 		{
@@ -130,7 +110,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		textures.insert(textures.end(), specularTextures.begin(), specularTextures.end());
 	}
 
-	ExtractMeshBoneData(vertices, mesh, scene);
+	ExtractJoints(vertices, mesh, scene);
 
 	//std::cout << "Created mesh: " << mesh->mName.C_Str() << std::endl;
 	return Mesh(vertices, indices, textures);
@@ -164,6 +144,7 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, TextureTy
 			}
 			else
 			{
+				// Assuming textures are embedded in model file
 				const aiTexture* aiTexture = scene->GetEmbeddedTexture(textureFileName.c_str());
 				texture.Id = TextureHelper::LoadTextureEmbedded(aiTexture);
 				texture.Type = type;
@@ -181,30 +162,45 @@ std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, TextureTy
 	return textures;
 }
 
-void Model::ExtractMeshBoneData(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene)
+void Model::ExtractJoints(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene)
 {
-	// Go through all bones in mesh
+	// Go through all joints in mesh
 	for (uint32_t i = 0; i < mesh->mNumBones; i++)
 	{
 		aiBone* bone = mesh->mBones[i];
 		
-		std::string boneName = bone->mName.C_Str();
-		int boneId = AppendBone(boneName, AssimpHelper::AssimpToGlmMatrix(bone->mOffsetMatrix));
+		std::string jointName = bone->mName.C_Str();
+		int jointId = AppendJoint(jointName, AssimpHelper::AssimpToGlmMatrix(bone->mOffsetMatrix));
 
-		assert(boneId != -1);
+		S_ASSERT(jointId != -1);
 		
 		uint32_t numVerticesInBone = bone->mNumWeights;
 		aiVertexWeight* weights = bone->mWeights;
 
-		// Go through all vertices whose position is influenced by this bone
+		// Go through all vertices whose position is influenced by this joint
 		for (uint32_t j = 0; j < numVerticesInBone; j++)
 		{
 			uint32_t vertexId = weights[j].mVertexId;
 			float weight = weights[j].mWeight;
 
-			assert(vertexId < vertices.size());
-			vertices[vertexId].SetBoneData(boneId, weight);
+			S_ASSERT(vertexId < vertices.size());
+			vertices[vertexId].SetJointData(jointId, weight);
 		}
 
 	}
+}
+
+int Model::AppendJoint(const std::string& name, const glm::mat4& inverseBindPose)
+{
+	// Joint may have been seen before in a different mesh in this model
+	if (m_JointIndex.find(name) == m_JointIndex.end())
+	{
+		Joint joint;
+		joint.Id = m_NumJointsLoaded;
+		joint.InverseBindPose = inverseBindPose;
+
+		m_JointIndex[name] = joint;
+		m_NumJointsLoaded++;
+	}
+	return m_JointIndex[name].Id;
 }

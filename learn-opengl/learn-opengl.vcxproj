@@ -135,7 +135,7 @@
   <ItemGroup>
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\Animator.cpp" />
-    <ClCompile Include="src\Bone.cpp" />
+    <ClCompile Include="src\JointClip.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -156,6 +156,7 @@
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Animator.h" />
     <ClInclude Include="src\AssimpHelper.h" />
+    <ClInclude Include="src\Core.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Mesh.h" />
