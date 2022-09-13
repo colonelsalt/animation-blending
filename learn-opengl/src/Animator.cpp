@@ -1,8 +1,9 @@
 #include "Animator.h"
 
+#include "Core.h"
 
-Animator::Animator(Animation* animation, bool shouldLoop)
-	: m_CurrentAnimation(animation), m_CurrentTime(0.0f), m_ShouldLoop(shouldLoop)
+Animator::Animator(bool shouldLoop)
+	: m_ShouldLoop(shouldLoop)
 {
 	m_SkinningMatrices.reserve(MAX_TOTAL_BONES);
 	for (uint32_t i = 0; i < MAX_TOTAL_BONES; i++)
@@ -13,28 +14,66 @@ Animator::Animator(Animation* animation, bool shouldLoop)
 
 void Animator::Update(float deltaTime)
 {
-	if (!m_CurrentAnimation || !m_IsRunning)
+	if (!m_IsRunning)
 		return;
 
-	m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * deltaTime;
+	m_CurrentTime += m_TicksPerSecond * deltaTime;
 	if (m_ShouldLoop)
-		m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
+		m_CurrentTime = fmod(m_CurrentTime, 1.0f);
 	else
-		m_CurrentTime = glm::max(m_CurrentTime, m_CurrentAnimation->GetDuration());
+		m_CurrentTime = glm::max(m_CurrentTime, 1.0f);
 
-	UpdateJointTransforms(m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f));
+	UpdateJointTransforms(m_Animations[0].first.GetRootNode(), glm::mat4(1.0f));
+}
+
+void Animator::AddAnimation(Animation& animation, float weight)
+{
+	m_Animations.push_back({ animation, weight });
+}
+
+void Animator::SetWeight(const std::string& animationName, float weight)
+{
+	for (uint32_t i = 0; i < m_Animations.size(); i++)
+	{
+		if (animationName == m_Animations[i].first.GetName())
+		{
+			m_Animations[i].second = weight;
+			return;
+		}
+	}
+	S_ASSERT(false);
 }
 
 void Animator::UpdateJointTransforms(const SkeletonNode& node, const glm::mat4& parentTransform)
 {
 	// Default value if this node is not animated
 	glm::mat4 jointTransform = node.Transform;
+	
+	glm::vec3 translation = glm::vec3(0.0f);
+	glm::quat rotation = glm::quat(0.0f, 0.0f, 0.0f, 0.0f);
+	glm::vec3 scale = glm::vec3(0.0f);
+	bool isAnimated = false;
 
-	JointClip* jointClip = m_CurrentAnimation->GetJointClip(node.Name);
-	if (jointClip)
+	std::vector<glm::vec3> scales;
+	for (auto& [animation, weight] : m_Animations)
 	{
-		jointClip->Update(m_CurrentTime);
-		jointTransform = jointClip->GetLocalPose();
+		JointClip* jointClip = animation.GetJointClip(node.Name);
+		if (jointClip)
+		{
+			isAnimated = true;
+
+			jointClip->Update(animation.ToLocalTime(m_CurrentTime));
+			jointTransform = jointClip->GetLocalPose();
+
+			translation += weight * jointClip->GetTranslation();
+			rotation = rotation + weight * jointClip->GetRotation();
+			scale += weight * jointClip->GetScale();
+		}
+	}
+	if (isAnimated)
+	{
+		jointTransform = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(glm::normalize(rotation))
+			* glm::scale(glm::mat4(1.0f), scale);
 	}
 
 	glm::mat4 modelSpaceTransform = parentTransform * jointTransform;

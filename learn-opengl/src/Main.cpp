@@ -16,6 +16,9 @@ static Camera s_Camera({ 0.0f, 4.0f, 13.0f });
 static float s_DeltaTime = 0.0f;
 static float s_LastFrameTime = 0.0f;
 
+static float s_RunWeight = 0.0f;
+static float s_Tps = 1.0f;
+
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -73,19 +76,17 @@ int main()
 
 	Model bossModel("assets/models/boss/The Boss.fbx");
 	
-	Animation idleAnimation("assets/models/boss/idle.fbx", &bossModel);
-	Animator idleAnimator(&idleAnimation, true);
+	//Animation idleAnimation("assets/models/boss/idle.fbx", &bossModel);
+	//Animator idleAnimator(&idleAnimation, true);
 
-	Animator* currentAnimator = &idleAnimator;
+	Animation walkingAnimation("assets/models/boss/walking.fbx", &bossModel, true);
+	Animation runAnimation("assets/models/boss/running.fbx", &bossModel, true);
+	Animator animator(true);
+	
+	animator.AddAnimation(walkingAnimation, 1.0f);
+	animator.AddAnimation(runAnimation, 0.0f);
 
-	Animation walkingAnimation("assets/models/boss/walking.fbx", &bossModel);
-	Animator walkingAnimator(&walkingAnimation, true);
-
-	Animation runAnimation("assets/models/boss/running.fbx", &bossModel);
-	Animator runAnimator(&runAnimation, true);
-
-	Animation coverAnimation("assets/models/boss/cover to stand.fbx", &bossModel);
-	Animator coverAnimator(&coverAnimation, true);
+	animator.Play();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -96,28 +97,24 @@ int main()
 		ProcessInput(window);
 		s_Camera.UpdateInput(window, s_DeltaTime);
 
-		if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
-			currentAnimator->Play();
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-			currentAnimator->Pause();
-
-		Animator* newAnimator = nullptr;
-		if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-			newAnimator = &walkingAnimator;
-		if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-			newAnimator = &runAnimator;
-		if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
-			newAnimator = &coverAnimator;
-		
-		if (newAnimator)
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			currentAnimator->Pause();
-			currentAnimator = newAnimator;
-			newAnimator->Play();
+			s_RunWeight += 0.3f * s_DeltaTime;
 		}
+		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		{
+			s_RunWeight -= 0.3f * s_DeltaTime;
+		}
+		s_RunWeight = glm::clamp(s_RunWeight, 0.0f, 1.0f);
+		s_Tps = glm::mix(0.8f, 1.5f, s_RunWeight);
 
+		std::cout << "Run weight: " << s_RunWeight << std::endl;
 
-		currentAnimator->Update(s_DeltaTime);
+		animator.SetWeight(walkingAnimation.GetName(), 1.0f - s_RunWeight);
+		animator.SetWeight(runAnimation.GetName(), s_RunWeight);
+		animator.SetTicksPerSecond(s_Tps);
+
+		animator.Update(s_DeltaTime);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -134,7 +131,7 @@ int main()
 		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
 		shader.SetVec3("u_DirLight.Specular", { 1.0f, 1.0f, 1.0f });
 
-		auto& skinningMatrices = currentAnimator->GetSkinningMatrices();
+		auto& skinningMatrices = animator.GetSkinningMatrices();
 		for (uint32_t i = 0; i < skinningMatrices.size(); i++)
 			shader.SetMat4("u_SkinningMatrices[" + std::to_string(i) + "]", skinningMatrices[i]);
 

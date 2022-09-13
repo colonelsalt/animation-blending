@@ -4,8 +4,12 @@
 
 #include "Core.h"
 
-Animation::Animation(const std::string& filePath, Model* model)
+Animation::Animation(const std::string& filePath, Model* model, bool shouldFreezeTranslation)
+	: m_ShouldFreezeTranslation(shouldFreezeTranslation)
 {
+	m_Name = filePath.substr(filePath.find_last_of('/') + 1);
+	std::cout << "Loaded animation: " << m_Name << std::endl;
+
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filePath, aiProcess_Triangulate);
 	S_ASSERT(scene && scene->mRootNode);
@@ -57,7 +61,7 @@ void Animation::CreateJointClips(const aiAnimation* animation)
 
 		std::string jointName = std::string(channel->mNodeName.C_Str());
 
-		JointClip jointClip(jointName, channel);
+		JointClip jointClip(jointName, channel, m_ShouldFreezeTranslation);
 		m_JointClips.emplace(jointName, jointClip);
 	}
 }

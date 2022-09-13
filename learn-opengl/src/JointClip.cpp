@@ -1,10 +1,11 @@
 #include "JointClip.h"
 
-JointClip::JointClip(const std::string& name, const aiNodeAnim* channel)
-	: m_LocalPose(1.0f), m_Name(name)
+JointClip::JointClip(const std::string& name, const aiNodeAnim* channel, bool shouldFreezeTranslation)
+	: m_LocalPose(1.0f), m_Name(name), m_ShouldFreezeTranslation(shouldFreezeTranslation)
 {
-	m_PositionKeys.reserve(channel->mNumPositionKeys);
-	for (uint32_t i = 0; i < channel->mNumPositionKeys; i++)
+	uint32_t numPositions = shouldFreezeTranslation ? 1 : channel->mNumPositionKeys;
+	m_PositionKeys.reserve(numPositions);
+	for (uint32_t i = 0; i < numPositions; i++)
 	{
 		aiVector3D& pos = channel->mPositionKeys[i].mValue;
 		float timestamp = channel->mPositionKeys[i].mTime;
@@ -36,18 +37,20 @@ JointClip::JointClip(const std::string& name, const aiNodeAnim* channel)
 
 void JointClip::Update(float animationTime)
 {
-	glm::mat4 translation = InterpolatePosition(animationTime);
-	glm::mat4 rotation = InterpolateRotation(animationTime);
-	glm::mat4 scale = InterpolateScale(animationTime);
+	m_Translation = InterpolatePosition(animationTime);
+	m_Rotation = InterpolateRotation(animationTime);
+	m_Scale = InterpolateScale(animationTime);
 
 	// S: Why this multiplication order?? Would any other do??
-	m_LocalPose = translation * rotation * scale;
+	m_LocalPose = glm::translate(glm::mat4(1.0f), m_Translation)
+		* glm::toMat4(m_Rotation)
+		* glm::scale(glm::mat4(1.0f), m_Scale);
 }
 
-glm::mat4 JointClip::InterpolatePosition(float animationTime) const
+glm::vec3 JointClip::InterpolatePosition(float animationTime) const
 {
 	if (m_PositionKeys.size() == 1)
-		return glm::translate(glm::mat4(1.0f), m_PositionKeys[0].Position);
+		return m_PositionKeys[0].Position;
 
 	int currentKeyIndex = GetPositionIndex(animationTime);
 
@@ -55,17 +58,15 @@ glm::mat4 JointClip::InterpolatePosition(float animationTime) const
 	const PositionKeyFrame& nextKey = m_PositionKeys[currentKeyIndex + 1];
 
 	float t = GetLerpParam(currentKey.Timestamp, nextKey.Timestamp, animationTime);
-	glm::vec3 interpolatedPos = glm::mix(currentKey.Position, nextKey.Position, t);
-
-	return glm::translate(glm::mat4(1.0f), interpolatedPos);
+	return glm::mix(currentKey.Position, nextKey.Position, t);
 }
 
-glm::mat4 JointClip::InterpolateRotation(float animationTime) const
+glm::quat JointClip::InterpolateRotation(float animationTime) const
 {
 	if (m_RotationKeys.size() == 1)
 	{
 		const glm::quat& rotation = m_RotationKeys[0].Rotation;
-		return glm::toMat4(glm::normalize(rotation));
+		return glm::normalize(rotation);
 	}
 
 	int currentKeyIndex = GetRotationIndex(animationTime);
@@ -77,13 +78,13 @@ glm::mat4 JointClip::InterpolateRotation(float animationTime) const
 	glm::quat interpolatedRot = glm::slerp(currentKey.Rotation, nextKey.Rotation, t);
 
 	// S: Why does a quaternion have to be normalised??
-	return glm::toMat4(glm::normalize(interpolatedRot));
+	return glm::normalize(interpolatedRot);
 }
 
-glm::mat4 JointClip::InterpolateScale(float animationTime) const
+glm::vec3 JointClip::InterpolateScale(float animationTime) const
 {
 	if (m_ScaleKeys.size() == 1)
-		return glm::scale(glm::mat4(1.0f), m_ScaleKeys[0].Scale);
+		return m_ScaleKeys[0].Scale;
 
 	int currentKeyIndex = GetScaleIndex(animationTime);
 
@@ -91,9 +92,7 @@ glm::mat4 JointClip::InterpolateScale(float animationTime) const
 	const ScaleKeyFrame& nextKey = m_ScaleKeys[currentKeyIndex + 1];
 
 	float t = GetLerpParam(currentKey.Timestamp, nextKey.Timestamp, animationTime);
-	glm::vec3 interpolatedScale = glm::mix(currentKey.Scale, nextKey.Scale, t);
-
-	return glm::scale(glm::mat4(1.0f), interpolatedScale);
+	return glm::mix(currentKey.Scale, nextKey.Scale, t);
 }
 
 int JointClip::GetPositionIndex(float animationTime) const

@@ -32,18 +32,22 @@ struct ScaleKeyFrame
 class JointClip
 {
 public:
-	JointClip(const std::string& name, const aiNodeAnim* channel);
+	JointClip(const std::string& name, const aiNodeAnim* channel, bool shouldFreezeTranslation = false);
 	
 	//! Interpolates local pose of joint between key frames of animation according to animation time
 	void Update(float animationTime);
 
 	const glm::mat4& GetLocalPose() const { return m_LocalPose; }
 	const std::string& GetName() const { return m_Name; }
+	
+	const glm::vec3& GetTranslation() const { return m_Translation; }
+	const glm::quat& GetRotation() const { return m_Rotation; }
+	const glm::vec3& GetScale() const { return m_Scale; }
 
 private:
-	glm::mat4 InterpolatePosition(float animationTime) const;
-	glm::mat4 InterpolateRotation(float animationTime) const;
-	glm::mat4 InterpolateScale(float animationTime) const;
+	glm::vec3 InterpolatePosition(float animationTime) const;
+	glm::quat InterpolateRotation(float animationTime) const;
+	glm::vec3 InterpolateScale(float animationTime) const;
 
 	int GetPositionIndex(float animationTime) const;
 	int GetRotationIndex(float animationTime) const;
@@ -52,9 +56,15 @@ private:
 	static float GetLerpParam(float prevKeyTime, float nextKeyTime, float currentTime);
 
 private:
+	bool m_ShouldFreezeTranslation;
+
 	std::vector<PositionKeyFrame> m_PositionKeys;
 	std::vector<RotationKeyFrame> m_RotationKeys;
 	std::vector<ScaleKeyFrame> m_ScaleKeys;
+
+	glm::vec3 m_Translation;
+	glm::quat m_Rotation;
+	glm::vec3 m_Scale;
 
 	glm::mat4 m_LocalPose; // transform of joint relative to its parent
 	std::string m_Name;
