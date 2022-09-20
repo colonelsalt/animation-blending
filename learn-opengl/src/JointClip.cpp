@@ -3,7 +3,7 @@
 JointClip::JointClip(const std::string& name, const aiNodeAnim* channel, bool shouldFreezeTranslation)
 	: m_LocalPose(1.0f), m_Name(name), m_ShouldFreezeTranslation(shouldFreezeTranslation)
 {
-	uint32_t numPositions = shouldFreezeTranslation ? 1 : channel->mNumPositionKeys;
+	uint32_t numPositions = /*shouldFreezeTranslation ? 1 :*/ channel->mNumPositionKeys;
 	m_PositionKeys.reserve(numPositions);
 	for (uint32_t i = 0; i < numPositions; i++)
 	{
@@ -38,6 +38,9 @@ JointClip::JointClip(const std::string& name, const aiNodeAnim* channel, bool sh
 void JointClip::Update(float animationTime)
 {
 	m_Translation = InterpolatePosition(animationTime);
+	if (m_ShouldFreezeTranslation)
+		m_Translation = glm::vec3(m_Translation.x, m_Translation.y, 0.0f);
+
 	m_Rotation = InterpolateRotation(animationTime);
 	m_Scale = InterpolateScale(animationTime);
 

@@ -72,7 +72,8 @@ void Animator::UpdateJointTransforms(const SkeletonNode& node, const glm::mat4& 
 	}
 	if (isAnimated)
 	{
-		jointTransform = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(glm::normalize(rotation))
+		jointTransform = glm::translate(glm::mat4(1.0f), translation)
+			* glm::toMat4(glm::normalize(rotation))
 			* glm::scale(glm::mat4(1.0f), scale);
 	}
 
