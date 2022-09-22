@@ -134,9 +134,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Animation.cpp" />
-    <ClCompile Include="src\Animator.cpp" />
-    <ClCompile Include="src\JointClip.cpp" />
+    <ClCompile Include="src\Animation\AnimationClip.cpp" />
+    <ClCompile Include="src\Animation\AnimationState.cpp" />
+    <ClCompile Include="src\Animation\Animator.cpp" />
+    <ClCompile Include="src\Animation\BlendHelper.cpp" />
+    <ClCompile Include="src\Animation\BlendNode.cpp" />
+    <ClCompile Include="src\Animation\JointDirectory.cpp" />
+    <ClCompile Include="src\Animation\Transition.cpp" />
+    <ClCompile Include="src\Animation\JointClip.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -154,9 +159,13 @@
     <None Include="assets\shaders\WhiteFrag.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Animation.h" />
-    <ClInclude Include="src\AnimationState.h" />
-    <ClInclude Include="src\Animator.h" />
+    <ClInclude Include="src\Animation\AnimationClip.h" />
+    <ClInclude Include="src\Animation\AnimationNode.h" />
+    <ClInclude Include="src\Animation\AnimationState.h" />
+    <ClInclude Include="src\Animation\Animator.h" />
+    <ClInclude Include="src\Animation\BlendHelper.h" />
+    <ClInclude Include="src\Animation\BlendNode.h" />
+    <ClInclude Include="src\Animation\JointDirectory.h" />
     <ClInclude Include="src\AssimpHelper.h" />
     <ClInclude Include="src\Core.h" />
     <ClInclude Include="src\Model.h" />
@@ -164,7 +173,7 @@
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\TextureHelper.h" />
-    <ClInclude Include="src\Transition.h" />
+    <ClInclude Include="src\Animation\Transition.h" />
     <ClInclude Include="src\vendor\stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

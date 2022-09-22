@@ -1,8 +1,10 @@
 #include "JointClip.h"
 
 JointClip::JointClip(const std::string& name, const aiNodeAnim* channel, bool shouldFreezeTranslation)
-	: m_LocalPose(1.0f), m_Name(name), m_ShouldFreezeTranslation(shouldFreezeTranslation)
+	: m_Name(name), m_ShouldFreezeTranslation(shouldFreezeTranslation)
 {
+	m_LocalPose.JointName = name;
+
 	uint32_t numPositions = /*shouldFreezeTranslation ? 1 :*/ channel->mNumPositionKeys;
 	m_PositionKeys.reserve(numPositions);
 	for (uint32_t i = 0; i < numPositions; i++)
@@ -37,17 +39,12 @@ JointClip::JointClip(const std::string& name, const aiNodeAnim* channel, bool sh
 
 void JointClip::Update(float animationTime)
 {
-	m_Translation = InterpolatePosition(animationTime);
+	m_LocalPose.Translation = InterpolatePosition(animationTime);
 	if (m_ShouldFreezeTranslation)
-		m_Translation = glm::vec3(m_Translation.x, m_Translation.y, 0.0f);
+		m_LocalPose.Translation = glm::vec3(m_LocalPose.Translation.x, m_LocalPose.Translation.y, 0.0f);
 
-	m_Rotation = InterpolateRotation(animationTime);
-	m_Scale = InterpolateScale(animationTime);
-
-	// S: Why this multiplication order?? Would any other do??
-	m_LocalPose = glm::translate(glm::mat4(1.0f), m_Translation)
-		* glm::toMat4(m_Rotation)
-		* glm::scale(glm::mat4(1.0f), m_Scale);
+	m_LocalPose.Rotation = InterpolateRotation(animationTime);
+	m_LocalPose.Scale = InterpolateScale(animationTime);
 }
 
 glm::vec3 JointClip::InterpolatePosition(float animationTime) const

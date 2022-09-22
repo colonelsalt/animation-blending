@@ -9,15 +9,17 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Shader.h"
-#include "Animator.h"
+#include "Animation/Animator.h"
+#include "Animation/BlendNode.h"
 
 static Camera s_Camera({ 0.0f, 4.0f, 13.0f });
 
 static float s_DeltaTime = 0.0f;
 static float s_LastFrameTime = 0.0f;
 
-static float s_RunWeight = 0.0f;
-static float s_Tps = 1.0f;
+static float s_MoveSpeed = 0.0f;
+
+
 
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -72,21 +74,20 @@ int main()
 	Shader shader("assets/shaders/AnimVert.glsl", "assets/shaders/MeshFrag.glsl");
 	shader.Bind();
 
-	/*Model backpack("assets/models/backpack/backpack.obj");*/
+	std::shared_ptr<JointDirectory> jointDirectory = std::make_shared<JointDirectory>();
 
-	Model bossModel("assets/models/boss/The Boss.fbx");
+	Model bossModel("assets/models/boss/The Boss.fbx", jointDirectory);
+
+	AnimationClip walkClip("assets/models/boss/walking.fbx", jointDirectory, true);
+	AnimationClip runClip("assets/models/boss/running.fbx", jointDirectory, true);
 	
-	//Animation idleAnimation("assets/models/boss/idle.fbx", &bossModel);
-	//Animator idleAnimator(&idleAnimation, true);
+	BlendNode locomotionNode(&walkClip, &runClip);
+	AnimationState locomotionState("Locomotion", &locomotionNode, true);
+	locomotionState.AddVar<float>("MoveSpeed", { 0.2f, 0.0f, 1.0f });
 
-	Animation walkingAnimation("assets/models/boss/walking.fbx", &bossModel, true);
-	Animation runAnimation("assets/models/boss/running.fbx", &bossModel, true);
-	Animator animator(true);
-	
-	animator.AddAnimation(walkingAnimation, 1.0f);
-	animator.AddAnimation(runAnimation, 0.0f);
-
-	animator.Play();
+	Animator* animator = Animator::GetInstance();
+	animator->SetDirectory(jointDirectory);
+	animator->SetState(&locomotionState);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -99,22 +100,18 @@ int main()
 
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		{
-			s_RunWeight += 0.3f * s_DeltaTime;
+			s_MoveSpeed += 0.3f * s_DeltaTime;
+			std::cout << "Move speed: " << s_MoveSpeed << std::endl;
 		}
 		else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		{
-			s_RunWeight -= 0.3f * s_DeltaTime;
+			s_MoveSpeed -= 0.3f * s_DeltaTime;
+			std::cout << "Move speed: " << s_MoveSpeed << std::endl;
 		}
-		s_RunWeight = glm::clamp(s_RunWeight, 0.0f, 1.0f);
-		s_Tps = glm::mix(0.8f, 1.5f, s_RunWeight);
+		s_MoveSpeed = glm::clamp(s_MoveSpeed, 0.0f, 1.0f);
+		animator->SetFloat("MoveSpeed", s_MoveSpeed);
 
-		std::cout << "Run weight: " << s_RunWeight << std::endl;
-
-		animator.SetWeight(walkingAnimation.GetName(), 1.0f - s_RunWeight);
-		animator.SetWeight(runAnimation.GetName(), s_RunWeight);
-		animator.SetTicksPerSecond(s_Tps);
-
-		animator.Update(s_DeltaTime);
+		animator->Update(s_DeltaTime);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -131,7 +128,7 @@ int main()
 		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
 		shader.SetVec3("u_DirLight.Specular", { 1.0f, 1.0f, 1.0f });
 
-		auto& skinningMatrices = animator.GetSkinningMatrices();
+		auto& skinningMatrices = animator->GetSkinningMatrices();
 		for (uint32_t i = 0; i < skinningMatrices.size(); i++)
 			shader.SetMat4("u_SkinningMatrices[" + std::to_string(i) + "]", skinningMatrices[i]);
 

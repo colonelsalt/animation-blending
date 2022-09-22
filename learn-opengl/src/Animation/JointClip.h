@@ -1,13 +1,10 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include <vector>
+#include "AnimationNode.h"
 
 struct PositionKeyFrame
 {
@@ -37,12 +34,8 @@ public:
 	//! Interpolates local pose of joint between key frames of animation according to animation time
 	void Update(float animationTime);
 
-	const glm::mat4& GetLocalPose() const { return m_LocalPose; }
+	const LocalPose& GetLocalPose() const { return m_LocalPose; }
 	const std::string& GetName() const { return m_Name; }
-	
-	const glm::vec3& GetTranslation() const { return m_Translation; }
-	const glm::quat& GetRotation() const { return m_Rotation; }
-	const glm::vec3& GetScale() const { return m_Scale; }
 
 private:
 	glm::vec3 InterpolatePosition(float animationTime) const;
@@ -62,10 +55,6 @@ private:
 	std::vector<RotationKeyFrame> m_RotationKeys;
 	std::vector<ScaleKeyFrame> m_ScaleKeys;
 
-	glm::vec3 m_Translation;
-	glm::quat m_Rotation;
-	glm::vec3 m_Scale;
-
-	glm::mat4 m_LocalPose; // transform of joint relative to its parent
+	LocalPose m_LocalPose; // transform of joint relative to its parent
 	std::string m_Name;
 };

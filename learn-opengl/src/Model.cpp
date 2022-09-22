@@ -18,7 +18,8 @@ static aiTextureType ToAssimpTextureType(TextureType type)
 	}
 }
 
-Model::Model(const char* path)
+Model::Model(const char* path, const std::shared_ptr<JointDirectory>& jointDirectory)
+	: m_JointDirectory(jointDirectory)
 {
 	LoadModel(path);
 }
@@ -170,7 +171,7 @@ void Model::ExtractJoints(std::vector<Vertex>& vertices, aiMesh* mesh, const aiS
 		aiBone* bone = mesh->mBones[i];
 		
 		std::string jointName = bone->mName.C_Str();
-		int jointId = AppendJoint(jointName, AssimpHelper::AssimpToGlmMatrix(bone->mOffsetMatrix));
+		int jointId = m_JointDirectory->AppendJoint(jointName, AssimpHelper::AssimpToGlmMatrix(bone->mOffsetMatrix));
 
 		S_ASSERT(jointId != -1);
 		
@@ -186,21 +187,5 @@ void Model::ExtractJoints(std::vector<Vertex>& vertices, aiMesh* mesh, const aiS
 			S_ASSERT(vertexId < vertices.size());
 			vertices[vertexId].SetJointData(jointId, weight);
 		}
-
 	}
-}
-
-int Model::AppendJoint(const std::string& name, const glm::mat4& inverseBindPose)
-{
-	// Joint may have been seen before in a different mesh in this model
-	if (m_JointIndex.find(name) == m_JointIndex.end())
-	{
-		Joint joint;
-		joint.Id = m_NumJointsLoaded;
-		joint.InverseBindPose = inverseBindPose;
-
-		m_JointIndex[name] = joint;
-		m_NumJointsLoaded++;
-	}
-	return m_JointIndex[name].Id;
 }
