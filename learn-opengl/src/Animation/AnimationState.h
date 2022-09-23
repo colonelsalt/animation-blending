@@ -17,14 +17,20 @@ struct AnimationVar
 class AnimationState
 {
 public:
-	AnimationState(std::string&& name, AnimationNode* animation, bool shouldLoop = false);
+	AnimationState(std::string&& name, AnimationNode* animation, bool shouldLoop = false, bool isResettable = true);
+
+	void Reset();
 
 	void Update(float deltaTime);
+
+	const std::string& GetName() const { return m_Name; }
 
 	template <typename T>
 	void AddVar(const std::string& name, AnimationVar<T>&& var);
 
 	const std::unordered_map<std::string, LocalPose>& GetLocalPoses() const { return m_Animation->GetLocalPoses(); }
+	void SetCompletionTime(float fraction) { m_CompletionTime = fraction * m_Animation->GetDuration(); }
+	
 	void SetOnCompleteTransition(Transition* transition) { m_OnCompleteTransition = transition; }
 	void AddTriggerTransition(std::string&& triggerName, Transition* transition);
 
@@ -38,6 +44,8 @@ private:
 
 	float m_AnimationTime = 0.0f;
 	bool m_ShouldLoop;
+	bool m_IsResettable;
+	float m_CompletionTime;
 
 	std::unordered_map<std::string, AnimationVar<float>> m_FloatVars;
 

@@ -8,7 +8,8 @@
 class AnimationClip : public AnimationNode
 {
 public:
-	AnimationClip(const std::string& filePath, const std::shared_ptr<JointDirectory>& jointDirectory, bool shouldFreezeTranslation = false);
+	AnimationClip(const std::string& filePath, const std::shared_ptr<JointDirectory>& jointDirectory,
+				  bool shouldFreezeTranslation = false, bool useLocalTime = false);
 
 	void UpdateLocalPoses(float animationTime) override;
 	const std::unordered_map<std::string, LocalPose>& GetLocalPoses() const override { return m_LocalPoses; }
@@ -20,6 +21,7 @@ private:
 private:
 	std::string m_Name;
 	bool m_ShouldFreezeTranslation;
+	bool m_UsesLocalTime;
 
 	std::unordered_map<std::string, JointClip> m_JointClips;
 	std::unordered_map<std::string, LocalPose> m_LocalPoses;

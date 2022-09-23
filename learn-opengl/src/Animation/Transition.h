@@ -14,7 +14,8 @@ public:
 	void Update(float deltaTime);
 
 	const std::unordered_map<std::string, LocalPose>& GetLocalPoses() const { return m_LocalPoses; }
-	
+
+	AnimationState* GetSourceState() const { return m_SourceState; }
 	AnimationState* GetTargetState() const { return m_TargetState; }
 private:
 	AnimationState* m_SourceState;

@@ -3,9 +3,16 @@
 #include "Animator.h"
 #include "BlendNode.h"
 
-AnimationState::AnimationState(std::string&& name, AnimationNode* animation, bool shouldLoop)
-	: m_Name(std::move(name)), m_Animation(animation), m_ShouldLoop(shouldLoop)
+AnimationState::AnimationState(std::string&& name, AnimationNode* animation, bool shouldLoop, bool isResettable)
+	: m_Name(std::move(name)), m_Animation(animation), m_ShouldLoop(shouldLoop), m_IsResettable(isResettable)
 {
+	m_CompletionTime = animation->GetDuration();
+}
+
+void AnimationState::Reset()
+{
+	if (m_IsResettable)
+		m_AnimationTime = 0.0f;
 }
 
 void AnimationState::AddTriggerTransition(std::string&& triggerName, Transition* transition)
@@ -19,15 +26,14 @@ void AnimationState::Update(float deltaTime)
 	m_AnimationTime += deltaTime * m_Animation->GetTicksPerSecond();
 	if (m_ShouldLoop)
 	{
-		m_AnimationTime = fmod(m_AnimationTime, m_Animation->GetDuration());
+		m_AnimationTime = fmod(m_AnimationTime, m_CompletionTime);
 	}
 	else
 	{
-		m_AnimationTime = glm::max(m_AnimationTime, m_Animation->GetDuration());
-		if (m_OnCompleteTransition)
+		if (m_AnimationTime >= m_CompletionTime && m_OnCompleteTransition && !Animator::GetInstance()->IsTransitioning())
 		{
+			m_AnimationTime = m_CompletionTime;
 			Animator::GetInstance()->OnStateFinished(this, m_OnCompleteTransition);
-			m_AnimationTime = 0.0f;
 			return;
 		}
 	}

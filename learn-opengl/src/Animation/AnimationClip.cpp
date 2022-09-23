@@ -3,8 +3,9 @@
 #include "../Core.h"
 #include "../AssimpHelper.h"
 
-AnimationClip::AnimationClip(const std::string& filePath, const std::shared_ptr<JointDirectory>& jointDirectory, bool shouldFreezeTranslation)
-	: m_ShouldFreezeTranslation(shouldFreezeTranslation), m_JointDirectory(jointDirectory)
+AnimationClip::AnimationClip(const std::string& filePath, const std::shared_ptr<JointDirectory>& jointDirectory,
+							 bool shouldFreezeTranslation, bool useLocalTime)
+	: m_ShouldFreezeTranslation(shouldFreezeTranslation), m_UsesLocalTime(useLocalTime), m_JointDirectory(jointDirectory)
 {
 	m_Name = filePath.substr(filePath.find_last_of('/') + 1);
 	std::cout << "Loaded animation: " << m_Name << std::endl;
@@ -24,9 +25,17 @@ AnimationClip::AnimationClip(const std::string& filePath, const std::shared_ptr<
 
 void AnimationClip::UpdateLocalPoses(float animationTime)
 {
-	S_ASSERT(animationTime >= 0 && animationTime <= 1);
+	float localTime;
+	if (m_UsesLocalTime)
+	{
+		localTime = animationTime;
+	}
+	else
+	{
+		S_ASSERT(animationTime >= 0 && animationTime <= 1);
+		localTime = animationTime * m_LocalDuration;
+	}
 
-	float localTime = animationTime * m_LocalDuration;
 	for (auto& [name, jointClip] : m_JointClips)
 	{
 		jointClip.Update(localTime);

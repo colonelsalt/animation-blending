@@ -17,6 +17,7 @@ void Transition::Update(float deltaTime)
 	{
 		Animator::GetInstance()->OnTransitionFinished(this);
 		// Reset
+		m_SourceState->Reset();
 		m_TimePassed = 0.0f;
 		return;
 	}

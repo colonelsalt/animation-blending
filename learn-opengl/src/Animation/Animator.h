@@ -14,7 +14,6 @@ public:
 
 	void SetDirectory(const std::shared_ptr<JointDirectory>& jointDirectory) { m_JointDirectory = jointDirectory; }
 	void SetState(AnimationState* state) { S_ASSERT(!m_CurrentState); m_CurrentState = state; }
-	void SetTransition(Transition* transition) { S_ASSERT(!m_CurrentTransition); m_CurrentTransition = transition; }
 
 	void Update(float deltaTime);
 
@@ -23,6 +22,8 @@ public:
 
 	void OnStateFinished(const AnimationState* state, Transition* nextTransition);
 	void OnTransitionFinished(const Transition* transition);
+
+	bool IsTransitioning() const { return m_CurrentTransition; }
 
 	//! Describes each joint's offset from its bind pose
 	const std::vector<glm::mat4>& GetSkinningMatrices() const { return m_SkinningMatrices; }

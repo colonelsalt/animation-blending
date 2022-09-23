@@ -26,10 +26,16 @@ void Animator::Update(float deltaTime)
 {
 	if (m_CurrentTransition)
 		m_CurrentTransition->Update(deltaTime);
-	else if (m_CurrentState)
+	if (m_CurrentState)
 		m_CurrentState->Update(deltaTime);
 
 	UpdateSkinningMatrices(m_JointDirectory->GetRootNode(), glm::mat4(1.0f));
+}
+
+void Animator::SetTrigger(const std::string& name)
+{
+	if (m_CurrentState)
+		m_CurrentState->SetTrigger(name);
 }
 
 void Animator::SetFloat(const std::string& name, float value)
@@ -40,8 +46,15 @@ void Animator::SetFloat(const std::string& name, float value)
 
 void Animator::OnStateFinished(const AnimationState* state, Transition* nextTransition)
 {
+	std::cout << "State " << state->GetName() << " completed" << std::endl;
+
 	S_ASSERT(state == m_CurrentState);
 	S_ASSERT(!m_CurrentTransition);
+
+	std::cout << "Transitioning to state " << nextTransition->GetTargetState()->GetName() << std::endl;
+	//nextTransition->GetTargetState()->Reset();
+	/*if (nextTransition->GetTargetState()->GetName() == "Halting")
+		__debugbreak();*/
 
 	m_CurrentState = nullptr;
 	m_CurrentTransition = nextTransition;
@@ -52,7 +65,10 @@ void Animator::OnTransitionFinished(const Transition* transition)
 	S_ASSERT(transition == m_CurrentTransition);
 	S_ASSERT(!m_CurrentState);
 
+	std::cout << "Transitioned to state " << transition->GetTargetState()->GetName() << std::endl;
+
 	m_CurrentTransition = nullptr;
+	transition->GetSourceState()->Reset();
 	m_CurrentState = transition->GetTargetState();
 }
 
