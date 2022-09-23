@@ -197,10 +197,10 @@ int main()
 		shader.SetMat4("u_View", s_Camera.GetViewMatrix());
 		shader.SetMat4("u_Projection", s_Camera.GetProjectionMatrix());
 
-		shader.SetVec3("u_DirLight.Direction", { 0.1f, -1.0f, 0.3f });
+		shader.SetVec3("u_DirLight.Direction", { -0.2f, -1.0f, -0.3f });
 		shader.SetVec3("u_DirLight.Ambient", { 0.2f, 0.2f, 0.2f });
 		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
-		shader.SetVec3("u_DirLight.Specular", { 1.0f, 1.0f, 1.0f });
+		shader.SetVec3("u_DirLight.Specular", { 0.5f, 0.5f, 0.5f });
 
 		auto& skinningMatrices = animator->GetSkinningMatrices();
 		for (uint32_t i = 0; i < skinningMatrices.size(); i++)

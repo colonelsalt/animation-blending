@@ -19,10 +19,13 @@ const int MAX_JOINTS_PER_VERTEX = 4; // no more than 4 joints can influence the 
 uniform mat4 u_SkinningMatrices[MAX_TOTAL_JOINTS];
 
 out vec2 v_TexCoords;
+out vec3 v_Normal;
+out vec3 v_FragPos;
 
 void main()
 {
 	vec4 finalPosition = vec4(0.0);
+	vec3 localNormal = vec3(0.0);
 
 	// Go through all joints attached to this vertex, and sum up their contribution to the final pos/rot of the vertex
 	for (int i = 0; i < MAX_JOINTS_PER_VERTEX; i++)
@@ -40,8 +43,11 @@ void main()
 
 		vec4 bonePosition = u_SkinningMatrices[a_JointIds[i]] * vec4(a_Position, 1.0);
 		finalPosition += bonePosition * a_JointWeights[i];
+		localNormal += mat3(u_SkinningMatrices[a_JointIds[i]]) * a_Normal;
 	}
-
+	
+	v_FragPos = vec3(u_Model * vec4(a_Position, 1.0));
+	v_Normal = mat3(transpose(inverse(u_Model))) * localNormal;
 	gl_Position = u_Projection * u_View * u_Model * finalPosition;
 	v_TexCoords = a_TexCoords;
 }

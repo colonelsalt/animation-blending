@@ -20,13 +20,13 @@ uniform Material u_Material;
 uniform DirLight u_DirLight;
 uniform vec3 u_ViewPos;
 
-//in vec3 v_Normal;
-//in vec3 v_FragPos;
+in vec3 v_Normal;
+in vec3 v_FragPos;
 in vec2 v_TexCoords;
 
 out vec4 color;
 
-/*vec3 CalculateDirLight(DirLight light, vec3 normal, vec3 viewDir)
+vec3 CalculateDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
 	vec3 ambientColor = light.Ambient * texture(u_Material.TextureDiffuse1, v_TexCoords).xyz;
 
@@ -39,20 +39,11 @@ out vec4 color;
 	vec3 specularColor = texture(u_Material.TextureSpecular1, v_TexCoords).xyz * specularIntensity * light.Specular;
 
 	return ambientColor + diffuseColor + specularColor;
-}*/
-
-vec3 NoLightColor()
-{
-	vec3 ambientColor = 0.3 * texture(u_Material.TextureDiffuse1, v_TexCoords).xyz;
-
-	vec3 diffuseColor = texture(u_Material.TextureDiffuse1, v_TexCoords).xyz * 0.8;
-
-	return ambientColor + diffuseColor;
 }
 
 void main()
 {
-	//vec3 normal = normalize(v_Normal);
-	//vec3 viewDir = normalize(u_ViewPos - v_FragPos);
-	color = vec4(NoLightColor(), 1.0); //vec4(CalculateDirLight(u_DirLight, normal, viewDir), 1.0); 
+	vec3 normal = normalize(v_Normal);
+	vec3 viewDir = normalize(u_ViewPos - v_FragPos);
+	color = vec4(CalculateDirLight(u_DirLight, normal, viewDir), 1.0); 
 }
