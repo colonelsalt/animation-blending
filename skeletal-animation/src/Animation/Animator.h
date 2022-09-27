@@ -33,7 +33,7 @@ private:
 	void UpdateSkinningMatrices(const SkeletonNode& node, const glm::mat4& parentTransform);
 	const std::unordered_map<std::string, LocalPose>& GetLocalPoses() const;
 private:
-	static constexpr int MAX_TOTAL_BONES = 100;
+	static constexpr int MAX_TOTAL_JOINTS = 100;
 	static Animator* s_Instance;
 
 	std::shared_ptr<JointDirectory> m_JointDirectory;

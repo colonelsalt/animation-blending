@@ -105,7 +105,7 @@ int JointClip::GetPositionIndex(float animationTime) const
 		if (animationTime < m_PositionKeys[i + 1].Timestamp)
 			return i;
 	}
-	return m_PositionKeys.size() - 2;
+	return ((int)m_PositionKeys.size()) - 2;
 }
 
 int JointClip::GetRotationIndex(float animationTime) const
@@ -115,7 +115,7 @@ int JointClip::GetRotationIndex(float animationTime) const
 		if (animationTime < m_RotationKeys[i + 1].Timestamp)
 			return i;
 	}
-	return m_RotationKeys.size() - 2;
+	return ((int)m_RotationKeys.size()) - 2;
 }
 
 int JointClip::GetScaleIndex(float animationTime) const
@@ -125,7 +125,7 @@ int JointClip::GetScaleIndex(float animationTime) const
 		if (animationTime < m_ScaleKeys[i + 1].Timestamp)
 			return i;
 	}
-	return m_ScaleKeys.size() - 2;
+	return ((int)m_ScaleKeys.size()) - 2;
 }
 
 float JointClip::GetLerpParam(float prevKeyTime, float nextKeyTime, float currentTime)

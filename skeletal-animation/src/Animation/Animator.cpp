@@ -6,8 +6,8 @@ Animator* Animator::s_Instance = new Animator();
 
 Animator::Animator()
 {
-	m_SkinningMatrices.reserve(MAX_TOTAL_BONES);
-	for (uint32_t i = 0; i < MAX_TOTAL_BONES; i++)
+	m_SkinningMatrices.reserve(MAX_TOTAL_JOINTS);
+	for (uint32_t i = 0; i < MAX_TOTAL_JOINTS; i++)
 	{
 		m_SkinningMatrices.push_back(glm::mat4(1.0f));
 	}
@@ -52,9 +52,6 @@ void Animator::OnStateFinished(const AnimationState* state, Transition* nextTran
 	S_ASSERT(!m_CurrentTransition);
 
 	std::cout << "Transitioning to state " << nextTransition->GetTargetState()->GetName() << std::endl;
-	//nextTransition->GetTargetState()->Reset();
-	/*if (nextTransition->GetTargetState()->GetName() == "Halting")
-		__debugbreak();*/
 
 	m_CurrentState = nullptr;
 	m_CurrentTransition = nextTransition;
@@ -65,7 +62,7 @@ void Animator::OnTransitionFinished(const Transition* transition)
 	S_ASSERT(transition == m_CurrentTransition);
 	S_ASSERT(!m_CurrentState);
 
-	std::cout << "Transitioned to state " << transition->GetTargetState()->GetName() << std::endl;
+	std::cout << "In state " << transition->GetTargetState()->GetName() << std::endl;
 
 	m_CurrentTransition = nullptr;
 	transition->GetSourceState()->Reset();
@@ -94,7 +91,9 @@ void Animator::UpdateSkinningMatrices(const SkeletonNode& node, const glm::mat4&
 	if (m_JointDirectory->ContainsJoint(node.Name))
 	{
 		const Joint& joint = m_JointDirectory->GetJoint(node.Name);
-		m_SkinningMatrices[joint.Id] = modelSpaceTransform * joint.InverseBindPose;
+		glm::mat4 skinningMatrix = modelSpaceTransform * joint.InverseBindPose;
+		if (skinningMatrix != glm::mat4(1.0f))
+			m_SkinningMatrices[joint.Id] = skinningMatrix;
 	}
 
 	// Recursively update skinning matrices of node's children

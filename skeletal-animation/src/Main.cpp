@@ -48,7 +48,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGLStuff", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "AnimationSystem", nullptr, nullptr);
 	if (!window)
 	{
 		std::cout << "Failed to create GLFW window." << std::endl;
@@ -200,18 +200,14 @@ int main()
 		shader.SetVec3("u_DirLight.Direction", { -0.2f, -1.0f, -0.3f });
 		shader.SetVec3("u_DirLight.Ambient", { 0.2f, 0.2f, 0.2f });
 		shader.SetVec3("u_DirLight.Diffuse", { 0.8f, 0.8f, 0.8f });
-		shader.SetVec3("u_DirLight.Specular", { 0.5f, 0.5f, 0.5f });
+		shader.SetVec3("u_DirLight.Specular", { 0.3f, 0.3f, 0.3f });
 
 		auto& skinningMatrices = animator->GetSkinningMatrices();
 		for (uint32_t i = 0; i < skinningMatrices.size(); i++)
 			shader.SetMat4("u_SkinningMatrices[" + std::to_string(i) + "]", skinningMatrices[i]);
 
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		
 		bossModel.Draw(shader);
 		
-		//backpack.Draw(shader);
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
